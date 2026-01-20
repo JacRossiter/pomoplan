@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Daily Scheduler</title>
+
+  <style>
+    :root{
+      /* Theme */
+      --bg:#141414;
+      --card:#232323;
+      --text:#f2f2f2;
+      --muted:#9a9a9a;
+      --border:#3a3a3a;
+
+      /* Accent */
+      --primary:#ff5aa5;
+
+      /* Layout / schedule */
+      --rowH: 38px;     /* schedule row height */
+      --dzH: 10px;      /* dropzone height */
+      --radius:12px;
+      --shadow: 0 10px 32px rgba(0,0,0,0.45);
+
+      --handle:#b7b7b7;
+      --focus:#5fb3ff;
+      --pastOpacity:0.45;
+      --headerH: 52px;
+    }
+
+    body.light{
+      --bg:#f5f5f5;
+      --card:#ffffff;
+      --text:#222;
+      --muted:#777;
+      --border:#e3e3e3;
+      --handle:#8a8a8a;
+      --shadow: 0 6px 26px rgba(0,0,0,0.12);
+    }
+
+    *{ box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif; }
+    body{ margin:0; background:var(--bg); color:var(--text); overflow:hidden; }
+
+    header{
+      height: var(--headerH);
+      background:var(--primary);
+      color:#fff;
+      padding:10px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      font-weight:800;
+      gap:12px;
+    }
+
+    .hdr-left{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      min-width:0;
+    }
+
+    .app-title{ white-space:nowrap; }
+    .countdown{
+      font-variant-numeric: tabular-nums;
+      opacity:0.95;
+      font-weight:900;
+      background:rgba(255,255,255,0.18);
+      padding:4px 10px;
+      border-radius:999px;
+      white-space:nowrap;
+    }
+
+    .hdr-actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+
+    .btn{
+      border:none;
+      border-radius:10px;
+      padding:8px 10px;
+      cursor:pointer;
+      font-weight:900;
+      line-height:1;
+      background:rgba(255,255,255,0.18);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .accent-btn{
+      width:38px; height:34px;
+      justify-content:center;
+      padding:0;
+      position:relative;
+    }
+    .accent-dot{
+      width:16px;height:16px;border-radius:50%;
+      background:var(--primary);
+      border:2px solid rgba(255,255,255,0.75);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    }
+
+    /* App layout */
+    .wrap{
+      height: calc(100vh - var(--headerH));
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 14px;
+      display:grid;
+      grid-template-columns: 300px 1fr;
+      gap:14px;
+      overflow:hidden; /* key for independent scrolling panels */
+    }
+
+    .col{
+      min-height:0; /* allow children overflow scrolling */
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .col.left{
+      overflow:auto; /* independent scroll */
+      padding-right: 2px;
+    }
+
+    .col.right{
+      overflow:auto; /* independent scroll */
+      padding-right: 2px;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:12px;
+      box-shadow:var(--shadow);
+    }
+
+    /* Calendar */
+    .cal-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:8px;
+      gap:8px;
+    }
+    .cal-title{ font-weight:900; font-size:14px; }
+
+    .cal-nav{ display:flex; gap:8px; }
+    .iconbtn{
+      border:1px solid var(--border);
+      background:transparent;
+      color:var(--text);
+      border-radius:10px;
+      padding:5px 10px;
+      cursor:pointer;
+      font-weight:900;
+    }
+
+    .dow{
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:4px;
+      font-size:11px;
+      color:var(--muted);
+      margin-bottom:6px;
+      user-select:none;
+    }
+    .dow div{ text-align:center; padding:2px 0; }
+
+    .cal-grid{
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:4px;
+    }
+
+    .day{
+      text-align:center;
+      padding:7px 0;
+      border-radius:10px;
+      cursor:pointer;
+      user-select:none;
+      border:1px solid transparent;
+      font-size:12px;
+    }
+    .day:hover{ border-color:var(--border); }
+    .day.blank{ cursor:default; opacity:0; pointer-events:none; }
+    .day.past{ color:var(--muted); opacity:0.75; }
+    .day.active{ background:var(--primary); color:#fff; }
+    .day.today{
+      box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--primary) 55%, transparent);
+    }
+
+    /* To-do (tightened padding) */
+    .todo-title{
+      font-weight:950;
+      margin:0 0 8px 0;
+      font-size:14px;
+    }
+    .todo-input{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:9px 10px;
+      background:transparent;
+      color:var(--text);
+      outline:none;
+      margin-bottom:8px;
+      font-size:13px;
+    }
+    .todo-input:focus{
+      border-color:var(--focus);
+      box-shadow:0 0 0 3px rgba(80,160,255,0.18);
+    }
+
+    .todo-list{
+      min-height:110px;
+      border:1px dashed var(--border);
+      border-radius:12px;
+      padding:6px;
+    }
+
+    .item{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 10px;         /* tightened */
+      border:1px solid var(--border);
+      border-radius:12px;
+      margin:6px 0;
+      background:rgba(255,255,255,0.04);
+    }
+    body.light .item{ background: rgba(0,0,0,0.05); }
+
+    .handle{
+      width:22px;
+      height:22px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      color:var(--handle);
+      cursor:grab;
+      user-select:none;
+      font-weight:900;
+      flex:0 0 22px;
+      border-radius:8px;
+    }
+    .handle:active{ cursor:grabbing; }
+    .item.dragging{
+      opacity:0.55;
+      transform: scale(0.99);
+    }
+
+    .text{
+      flex:1;
+      color:var(--text);
+      font-size:13px;
+      line-height:1.2;
+      word-break:break-word;
+    }
+
+    /* Drop indicator (between items / between rows) */
+    .dropzone{
+      height:var(--dzH);
+      border-radius:10px;
+      margin:2px 0;
+      position:relative;
+    }
+    .dropzone.active::after{
+      content:"";
+      position:absolute;
+      left:8px;
+      right:8px;
+      top:50%;
+      transform:translateY(-50%);
+      height:3px;
+      border-radius:3px;
+      background: color-mix(in srgb, var(--primary) 85%, white 15%);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+    }
+
+    /* Schedule */
+    .sched-head{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      margin-bottom:10px;
+      gap:10px;
+    }
+    .sched-title{
+      font-weight:950;
+      margin:0;
+      font-size:14px;
+    }
+    .sched-sub{ color:var(--muted); font-size:11px; }
+
+    .blocks{
+      position:relative;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    }
+
+    .row{
+      height:var(--rowH);
+      display:grid;
+      grid-template-columns: 70px 26px 1fr;
+      align-items:center;
+      border-bottom:1px solid var(--border);
+      padding:0 8px;
+      gap:6px;
+      background:transparent;
+    }
+    .row:last-child{ border-bottom:none; }
+    .row.past{ opacity:var(--pastOpacity); }
+
+    .time{
+      color:var(--muted);
+      font-size:12px;
+      font-variant-numeric: tabular-nums;
+      user-select:none;
+    }
+
+    .editor{
+      height: calc(var(--rowH) - 10px);
+      width: 100%;
+      border:1px solid transparent;
+      border-radius:10px;
+      padding:8px 10px;
+      background:transparent;
+      color:var(--text);
+      outline:none;
+      font-size:13px;
+    }
+    .editor::placeholder{ color:var(--muted); }
+    .editor:focus{
+      border-color:var(--focus);
+      box-shadow:0 0 0 3px rgba(80,160,255,0.18);
+      background:rgba(255,255,255,0.04);
+    }
+    body.light .editor:focus{ background: rgba(0,0,0,0.03); }
+
+    .droptarget{
+      outline:2px solid rgba(90,180,255,0.55);
+      outline-offset:-2px;
+    }
+
+    /* Now line + pill */
+    .nowline{
+      position:absolute;
+      left:0;
+      right:0;
+      height:2px;
+      background: var(--primary);
+      z-index:5;
+      pointer-events:none;
+    }
+    .nowpill{
+      position:absolute;
+      right:10px;
+      transform:translateY(-50%);
+      padding:3px 8px;
+      border-radius:999px;
+      background: var(--card);
+      border:1px solid color-mix(in srgb, var(--primary) 55%, var(--border));
+      color: var(--primary);
+      font-size:12px;
+      font-weight:950;
+      font-variant-numeric: tabular-nums;
+      z-index:6;
+      pointer-events:none;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    }
+
+    /* Popovers / modals */
+    .backdrop{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,0.4);
+      display:none;
+      z-index:50;
+    }
+    .popover{
+      position:fixed;
+      z-index:60;
+      width: 320px;
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      box-shadow: var(--shadow);
+      padding:12px;
+      display:none;
+    }
+    .pop-title{
+      font-weight:950;
+      margin: 0 0 10px 0;
+      font-size:13px;
+    }
+    .row2{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin:8px 0;
+    }
+    .label{ color:var(--muted); font-size:12px; }
+    .range{ width: 100%; }
+    .pill{
+      font-variant-numeric: tabular-nums;
+      border:1px solid var(--border);
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:12px;
+      color:var(--text);
+      min-width: 74px;
+      text-align:center;
+    }
+    .preview{
+      height:34px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: var(--primary);
+    }
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      color:var(--text);
+      user-select:none;
+    }
+    .toggle input{ transform: translateY(1px); }
+    .divider{
+      height:1px;
+      background:var(--border);
+      margin:10px 0;
+    }
+
+    /* nicer scrollbars */
+    .col.left::-webkit-scrollbar,
+    .col.right::-webkit-scrollbar{
+      width:10px;
+    }
+    .col.left::-webkit-scrollbar-thumb,
+    .col.right::-webkit-scrollbar-thumb{
+      background:rgba(255,255,255,0.12);
+      border-radius:999px;
+      border:2px solid transparent;
+      background-clip: padding-box;
+    }
+    body.light .col.left::-webkit-scrollbar-thumb,
+    body.light .col.right::-webkit-scrollbar-thumb{
+      background:rgba(0,0,0,0.15);
+      background-clip: padding-box;
+    }
+
+    @media (max-width: 980px){
+      body{ overflow:auto; }
+      .wrap{
+        height:auto;
+        grid-template-columns: 1fr;
+        overflow:visible;
+      }
+      .col.left, .col.right{ overflow:visible; }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="hdr-left">
+    <div class="app-title">Daily Scheduler</div>
+    <div id="countdown" class="countdown">--:--</div>
+  </div>
+
+  <div class="hdr-actions">
+    <button id="accentBtn" class="btn accent-btn" title="Accent color">
+      <span class="accent-dot" aria-hidden="true"></span>
+    </button>
+
+    <button id="soundBtn" class="btn" title="Sound settings">🔊</button>
+    <button id="darkBtn" class="btn" title="Toggle theme">☀️</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="col left">
+    <div class="card">
+      <div class="cal-head">
+        <div class="cal-title" id="monthLabel"></div>
+        <div class="cal-nav">
+          <button class="iconbtn" id="prevMonth" aria-label="Previous month">‹</button>
+          <button class="iconbtn" id="nextMonth" aria-label="Next month">›</button>
+        </div>
+      </div>
+
+      <div class="dow">
+        <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+      </div>
+
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <div class="card">
+      <h3 class="todo-title">To Do</h3>
+      <input id="todoInput" class="todo-input" placeholder="Add a todo and press Enter" />
+      <div id="todoList" class="todo-list"></div>
+      <div class="label" style="margin-top:8px;">
+        Drag using ⋮⋮. Drop between items to reorder.
+      </div>
+    </div>
+  </div>
+
+  <div class="col right">
+    <div class="card">
+      <div class="sched-head">
+        <h3 class="sched-title" id="dateLabel"></h3>
+        <div class="sched-sub">7:00 AM → 10:00 PM (30-min blocks)</div>
+      </div>
+
+      <div class="blocks" id="blocks">
+        <div class="nowline" id="nowLine" style="display:none"></div>
+        <div class="nowpill" id="nowPill" style="display:none"></div>
+        <div id="rows"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Popovers -->
+<div id="backdrop" class="backdrop"></div>
+
+<div id="accentPop" class="popover" role="dialog" aria-label="Accent color picker">
+  <div class="pop-title">Accent color (HSL)</div>
+  <div class="preview" id="accentPreview"></div>
+
+  <div class="row2">
+    <div class="label">Hue</div>
+    <div class="pill" id="hVal">0°</div>
+  </div>
+  <input id="hRange" class="range" type="range" min="0" max="360" value="330"/>
+
+  <div class="row2">
+    <div class="label">Saturation</div>
+    <div class="pill" id="sVal">100%</div>
+  </div>
+  <input id="sRange" class="range" type="range" min="0" max="100" value="70"/>
+
+  <div class="row2">
+    <div class="label">Lightness</div>
+    <div class="pill" id="lVal">50%</div>
+  </div>
+  <input id="lRange" class="range" type="range" min="0" max="100" value="60"/>
+
+  <div class="divider"></div>
+  <div class="row2">
+    <div class="label">Hex</div>
+    <div class="pill" id="hexVal">#ff5aa5</div>
+  </div>
+</div>
+
+<div id="soundPop" class="popover" role="dialog" aria-label="Sound settings">
+  <div class="pop-title">Sound settings</div>
+
+  <label class="toggle">
+    <input id="muteChk" type="checkbox"/>
+    Mute
+  </label>
+
+  <div class="row2" style="margin-top:10px;">
+    <div class="label">Volume</div>
+    <div class="pill" id="volVal">60%</div>
+  </div>
+  <input id="volRange" class="range" type="range" min="0" max="100" value="60"/>
+
+  <div class="divider"></div>
+
+  <label class="toggle">
+    <input id="onlyIfTaskChk" type="checkbox"/>
+    Only play sounds when current block has a task
+  </label>
+
+  <div class="label" style="margin-top:10px;">
+    Plays a warning at 5 minutes remaining and another sound when the block ends.
+  </div>
+</div>
+
+<script>
+/* =========================
+   0) Utilities
+========================= */
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+function safeParse(s){ try { return JSON.parse(s); } catch { return null; } }
+
+/* Local YYYY-MM-DD (no timezone drift) */
+function dateKey(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function isSameDay(a,b){
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+function isPastDay(d, today){
+  const a = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const b = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  return a < b;
+}
+
+/* Time helpers */
+const START_H = 7, END_H = 22, SLOT_MIN = 30;
+
+function timeString(h,m){ return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`; }
+function allTimes(){
+  const out = [];
+  for(let h=START_H; h<END_H; h++){
+    out.push(timeString(h,0));
+    out.push(timeString(h,30));
+  }
+  return out;
+}
+const TIMES = allTimes();
+
+function isPastTimeSlot(slotDate, tStr){
+  const today = new Date();
+  if(!isSameDay(slotDate, today)) return false;
+  const [hh, mm] = tStr.split(":").map(Number);
+  const t = new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate(), hh, mm, 0, 0);
+  return t.getTime() < Date.now();
+}
+
+function getCurrentBlockInfo(now=new Date()){
+  const mins = now.getHours()*60 + now.getMinutes();
+  const startM = START_H*60;
+  const endM = END_H*60;
+  if(mins < startM || mins >= endM) return null;
+
+  const minsInto = mins - startM;
+  const slotIndex = Math.floor(minsInto / SLOT_MIN); // 0..29
+  const slotStartMins = startM + slotIndex*SLOT_MIN;
+  const slotEndMins = slotStartMins + SLOT_MIN;
+  const remaining = slotEndMins - mins;
+
+  const startH = Math.floor(slotStartMins / 60);
+  const startMin = slotStartMins % 60;
+  const timeKey = timeString(startH, startMin);
+
+  return {
+    slotIndex,
+    timeKey,
+    slotStartMins,
+    slotEndMins,
+    remainingMins: remaining,
+    remainingSecs: (slotEndMins*60) - (now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds())
+  };
+}
+
+/* HSL <-> HEX */
+function hslToRgb(h, s, l){
+  s/=100; l/=100;
+  const c = (1 - Math.abs(2*l - 1)) * s;
+  const x = c * (1 - Math.abs((h/60) % 2 - 1));
+  const m = l - c/2;
+  let r=0,g=0,b=0;
+  if(0<=h && h<60){ r=c; g=x; b=0; }
+  else if(60<=h && h<120){ r=x; g=c; b=0; }
+  else if(120<=h && h<180){ r=0; g=c; b=x; }
+  else if(180<=h && h<240){ r=0; g=x; b=c; }
+  else if(240<=h && h<300){ r=x; g=0; b=c; }
+  else { r=c; g=0; b=x; }
+  return {
+    r: Math.round((r+m)*255),
+    g: Math.round((g+m)*255),
+    b: Math.round((b+m)*255)
+  };
+}
+function rgbToHex(r,g,b){
+  const to = (n)=> n.toString(16).padStart(2,"0");
+  return `#${to(r)}${to(g)}${to(b)}`;
+}
+function hslToHex(h,s,l){
+  const {r,g,b} = hslToRgb(h,s,l);
+  return rgbToHex(r,g,b);
+}
+function hexToRgb(hex){
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if(!m) return null;
+  return { r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16) };
+}
+function rgbToHsl(r,g,b){
+  r/=255; g/=255; b/=255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h=0, s=0;
+  const l = (max+min)/2;
+  const d = max-min;
+  if(d !== 0){
+    s = d/(1-Math.abs(2*l-1));
+    switch(max){
+      case r: h = 60*(((g-b)/d) % 6); break;
+      case g: h = 60*(((b-r)/d) + 2); break;
+      case b: h = 60*(((r-g)/d) + 4); break;
+    }
+  }
+  if(h<0) h+=360;
+  return { h: Math.round(h), s: Math.round(s*100), l: Math.round(l*100) };
+}
+
+/* =========================
+   1) State / Storage
+========================= */
+const STORE_KEY = "dailyScheduler_v4";
+const defaultState = {
+  settings: {
+    theme: "dark",         // "dark" | "light"
+    accent: "#ff5aa5",
+    accentHSL: { h: 330, s: 70, l: 60 },
+
+    sound: {
+      mute: false,
+      volume: 60,          // 0-100
+      onlyIfTask: true
+    }
+  },
+  todos: [],
+  schedules: {}            // { "YYYY-MM-DD": { "HH:MM": "task" } }
+};
+
+let state = safeParse(localStorage.getItem(STORE_KEY)) ?? structuredClone(defaultState);
+
+function save(){
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+}
+
+function ensureSchedule(dk){
+  if(!state.schedules[dk]) state.schedules[dk] = {};
+  return state.schedules[dk];
+}
+function getSlotText(dk, t){ return state.schedules?.[dk]?.[t] ?? ""; }
+function setSlotText(dk, t, text){
+  ensureSchedule(dk);
+  if(!text || !text.trim()) delete state.schedules[dk][t];
+  else state.schedules[dk][t] = text;
+}
+
+/* =========================
+   2) Theme
+========================= */
+function applyTheme(){
+  document.body.classList.toggle("light", state.settings.theme === "light");
+  document.documentElement.style.setProperty("--primary", state.settings.accent);
+  $("#darkBtn").textContent = (state.settings.theme === "light") ? "🌙" : "☀️";
+  // dot updates automatically via CSS variable
+}
+applyTheme();
+
+$("#darkBtn").addEventListener("click", ()=>{
+  state.settings.theme = (state.settings.theme === "light") ? "dark" : "light";
+  save(); applyTheme();
+});
+
+/* =========================
+   3) Popover system (accent + sound)
+========================= */
+const backdrop = $("#backdrop");
+const accentPop = $("#accentPop");
+const soundPop = $("#soundPop");
+let openPop = null;
+
+function openPopover(pop, anchorEl){
+  closePopover();
+  openPop = pop;
+  backdrop.style.display = "block";
+  pop.style.display = "block";
+
+  // position near anchor
+  const r = anchorEl.getBoundingClientRect();
+  const popRect = pop.getBoundingClientRect();
+  const pad = 10;
+  let left = r.right - popRect.width;
+  let top = r.bottom + 10;
+  left = clamp(left, pad, window.innerWidth - popRect.width - pad);
+  top = clamp(top, pad, window.innerHeight - popRect.height - pad);
+  pop.style.left = `${left}px`;
+  pop.style.top = `${top}px`;
+}
+
+function closePopover(){
+  backdrop.style.display = "none";
+  accentPop.style.display = "none";
+  soundPop.style.display = "none";
+  openPop = null;
+}
+
+backdrop.addEventListener("click", closePopover);
+window.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closePopover(); });
+
+/* Accent HSL popup */
+const hRange = $("#hRange");
+const sRange = $("#sRange");
+const lRange = $("#lRange");
+const hVal = $("#hVal");
+const sVal = $("#sVal");
+const lVal = $("#lVal");
+const hexVal = $("#hexVal");
+const accentPreview = $("#accentPreview");
+
+function syncAccentUI(){
+  const {h,s,l} = state.settings.accentHSL;
+  hRange.value = h; sRange.value = s; lRange.value = l;
+  hVal.textContent = `${h}°`;
+  sVal.textContent = `${s}%`;
+  lVal.textContent = `${l}%`;
+  hexVal.textContent = state.settings.accent.toLowerCase();
+  accentPreview.style.background = state.settings.accent;
+}
+
+function commitAccentFromSliders(){
+  const h = Number(hRange.value);
+  const s = Number(sRange.value);
+  const l = Number(lRange.value);
+  const hex = hslToHex(h,s,l);
+  state.settings.accentHSL = {h,s,l};
+  state.settings.accent = hex;
+  save();
+  applyTheme();
+  syncAccentUI();
+}
+
+[hRange, sRange, lRange].forEach(inp=>{
+  inp.addEventListener("input", commitAccentFromSliders);
+});
+
+$("#accentBtn").addEventListener("click", (e)=>{
+  // if we have hex but missing hsl, derive
+  if(!state.settings.accentHSL){
+    const rgb = hexToRgb(state.settings.accent || "#ff5aa5");
+    state.settings.accentHSL = rgb ? rgbToHsl(rgb.r,rgb.g,rgb.b) : {h:330,s:70,l:60};
+  }
+  syncAccentUI();
+  openPopover(accentPop, $("#accentBtn"));
+});
+
+/* Sound popup */
+const muteChk = $("#muteChk");
+const volRange = $("#volRange");
+const volVal = $("#volVal");
+const onlyIfTaskChk = $("#onlyIfTaskChk");
+
+function syncSoundUI(){
+  muteChk.checked = !!state.settings.sound.mute;
+  volRange.value = state.settings.sound.volume ?? 60;
+  volVal.textContent = `${volRange.value}%`;
+  onlyIfTaskChk.checked = !!state.settings.sound.onlyIfTask;
+}
+
+function commitSound(){
+  state.settings.sound.mute = muteChk.checked;
+  state.settings.sound.volume = Number(volRange.value);
+  state.settings.sound.onlyIfTask = onlyIfTaskChk.checked;
+  save();
+}
+
+muteChk.addEventListener("change", commitSound);
+onlyIfTaskChk.addEventListener("change", commitSound);
+volRange.addEventListener("input", ()=>{
+  volVal.textContent = `${volRange.value}%`;
+  commitSound();
+});
+
+$("#soundBtn").addEventListener("click", ()=>{
+  syncSoundUI();
+  openPopover(soundPop, $("#soundBtn"));
+});
+
+/* =========================
+   4) Calendar
+========================= */
+const monthLabel = $("#monthLabel");
+const calGrid = $("#calGrid");
+const dateLabel = $("#dateLabel");
+
+const today = new Date();
+let viewMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+let selected = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+$("#prevMonth").addEventListener("click", ()=>{
+  viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()-1, 1);
+  renderCalendar();
+});
+$("#nextMonth").addEventListener("click", ()=>{
+  viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1);
+  renderCalendar();
+});
+
+function renderCalendar(){
+  calGrid.innerHTML = "";
+  monthLabel.textContent = viewMonth.toLocaleString(undefined, { month:"long", year:"numeric" });
+
+  const first = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
+  const last = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 0);
+
+  const blanks = first.getDay();
+  for(let i=0;i<blanks;i++){
+    const b = document.createElement("div");
+    b.className = "day blank";
+    calGrid.appendChild(b);
+  }
+
+  for(let day=1; day<=last.getDate(); day++){
+    const d = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), day);
+    const cell = document.createElement("div");
+    cell.className = "day";
+    cell.textContent = day;
+
+    if(isPastDay(d, today)) cell.classList.add("past");
+    if(isSameDay(d, today)) cell.classList.add("today");
+    if(isSameDay(d, selected)) cell.classList.add("active");
+
+    cell.addEventListener("click", ()=>{
+      selected = d;
+      renderCalendar();
+      renderSchedule();
+      // refresh countdown/title on date switch
+      tickCountdown(true);
+      updateNowLine();
+    });
+
+    calGrid.appendChild(cell);
+  }
+}
+
+/* =========================
+   5) Modular Drag & Drop Engine (shared)
+   - Supports "drop between" via dropzones
+   - Supports "drop on item" via swap logic (optional)
+========================= */
+const drag = {
+  type: null,        // "todo" | "slot"
+  fromList: null,    // "todo" or "schedule"
+  fromIndex: null,   // index in todos (if todo)
+  fromDateKey: null,
+  fromTime: null,
+  payload: "",       // text
+  draggingEl: null
+};
+
+function clearDrag(){
+  drag.type = null;
+  drag.fromList = null;
+  drag.fromIndex = null;
+  drag.fromDateKey = null;
+  drag.fromTime = null;
+  drag.payload = "";
+  if(drag.draggingEl) drag.draggingEl.classList.remove("dragging");
+  drag.draggingEl = null;
+}
+
+function setTransparentDragImage(e){
+  // A tiny transparent image makes the native drag ghost less annoying,
+  // then our UI indicators do the work (closer to your GIF feel).
+  const img = new Image();
+  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>`
+  );
+  e.dataTransfer.setDragImage(img, 0, 0);
+}
+
+function makeDropzone(onDrop){
+  const dz = document.createElement("div");
+  dz.className = "dropzone";
+  dz.addEventListener("dragover", (e)=>{ e.preventDefault(); dz.classList.add("active"); });
+  dz.addEventListener("dragleave", ()=> dz.classList.remove("active"));
+  dz.addEventListener("drop", (e)=>{
+    e.preventDefault();
+    dz.classList.remove("active");
+    onDrop();
+  });
+  return dz;
+}
+
+/* =========================
+   6) To-do
+========================= */
+const todoInput = $("#todoInput");
+const todoList = $("#todoList");
+
+todoInput.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter"){
+    const v = todoInput.value.trim();
+    if(!v) return;
+    state.todos.push(v);
+    todoInput.value = "";
+    save();
+    renderTodos();
+  }
+});
+
+function renderTodos(){
+  todoList.innerHTML = "";
+
+  // top drop
