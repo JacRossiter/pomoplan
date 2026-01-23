@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Daily Scheduler</title>
+  <title>Pomoplan</title>
   <style>
+    @import url("https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&display=swap");
+
     :root {
       --bg: #141414;
       --card: #232323;
@@ -72,11 +74,12 @@
       background: var(--primary);
       color: #fff;
       padding: 10px 14px;
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      justify-content: space-between;
       font-weight: 800;
       gap: 12px;
+      position: relative;
     }
 
     .hdr-left {
@@ -84,10 +87,22 @@
       align-items: baseline;
       gap: 10px;
       min-width: 0;
+      grid-column: 1;
     }
 
     .app-title {
       white-space: nowrap;
+      font-family: "Comfortaa", "Trebuchet MS", "Segoe UI", sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: 0.04em;
+      text-transform: lowercase;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
     }
 
     .countdown {
@@ -108,6 +123,8 @@
       border: none;
       background: transparent;
       box-shadow: none;
+      justify-self: end;
+      grid-column: 3;
     }
 
     .btn {
@@ -1353,7 +1370,7 @@
 <body>
   <header>
     <div class="hdr-left">
-      <div class="app-title">Daily Scheduler</div>
+      <div class="app-title">Pomoplan</div>
       <div id="countdown" class="countdown">--:--</div>
     </div>
     <div class="hdr-actions">
@@ -1540,7 +1557,7 @@
     <div class="pop-title">Quick help</div>
     <div class="help-kicker">What this is</div>
     <p class="help-text">
-      Daily Scheduler is for time-blocking your day. Add tasks, drag priorities into the schedule,
+      Pomoplan is for time-blocking your day. Add tasks, drag priorities into the schedule,
       and focus on one block at a time with optional sound alerts. If you use Pomodoro,
       treat each block as a focused sprint (often 25 minutes work + a short break).
     </p>
@@ -1585,7 +1602,7 @@
   <div id="infoTip" class="info-tooltip" role="status" aria-live="polite"></div>
 
   <div id="welcomePop" class="popover welcome-pop" role="dialog" aria-label="Welcome">
-    <div class="pop-title">Welcome to Daily Scheduler</div>
+    <div class="pop-title">Welcome to Pomoplan</div>
     <p class="welcome-text">
       This app is built for time-blocking your day. Add tasks, drag your priorities into
       the schedule, and focus on one block at a time. Check items off as you go and use
@@ -3492,7 +3509,7 @@ function deleteSlot(dk, t) {
       const blockInfo = getCurrentBlockInfo();
       if (!blockInfo) {
         countdownEl.textContent = "--:--";
-        if (forceTitle) document.title = "Daily Scheduler";
+        if (forceTitle) document.title = "Pomoplan";
         return;
       }
 
