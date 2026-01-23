@@ -4,1008 +4,2354 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Daily Scheduler</title>
-
   <style>
-    :root{
-      /* Theme */
-      --bg:#141414;
-      --card:#232323;
-      --text:#f2f2f2;
-      --muted:#9a9a9a;
-      --border:#3a3a3a;
+    :root {
+      --bg: #141414;
+      --card: #232323;
+      --text: #f2f2f2;
+      --muted: #9a9a9a;
+      --border: #3a3a3a;
+      --border-soft: #2d2d2d;
+      --surface: rgba(255, 255, 255, 0.03);
+      --surface-strong: rgba(255, 255, 255, 0.06);
+      --primary: #ff5aa5;
 
-      /* Accent */
-      --primary:#ff5aa5;
-
-      /* Layout / schedule */
-      --rowH: 38px;     /* schedule row height */
-      --dzH: 10px;      /* dropzone height */
-      --radius:12px;
-      --shadow: 0 10px 32px rgba(0,0,0,0.45);
-
-      --handle:#b7b7b7;
-      --focus:#5fb3ff;
-      --pastOpacity:0.45;
-      --headerH: 52px;
+      --rowH: 36px;
+      --dzH: 3px;
+      --checkSize: 14px;
+      --radius: 12px;
+      --shadow: none;
+      --handle: #b7b7b7;
+      --focus: #5fb3ff;
+      --pastOpacity: 0.45;
+      --headerH: 54px;
+      --ease: cubic-bezier(0.22, 0.7, 0.2, 1);
+      --ease-smooth: cubic-bezier(0.22, 0.8, 0.18, 1);
+      --ease-snap: cubic-bezier(0.2, 0.9, 0.25, 1);
+      --lift: none;
+      --itemPad: 6px 10px;
+      --rowPad: 0 12px;
     }
 
-    body.light{
-      --bg:#f5f5f5;
-      --card:#ffffff;
-      --text:#222;
-      --muted:#777;
-      --border:#e3e3e3;
-      --handle:#8a8a8a;
-      --shadow: 0 6px 26px rgba(0,0,0,0.12);
+    body.light {
+      --bg: #f5f5f5;
+      --card: #ffffff;
+      --text: #222;
+      --muted: #777;
+      --border: #e3e3e3;
+      --handle: #8a8a8a;
+      --shadow: 0 6px 26px rgba(0, 0, 0, 0.12);
     }
 
-    *{ box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif; }
-    body{ margin:0; background:var(--bg); color:var(--text); overflow:hidden; }
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+    }
 
-    header{
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      background-image:
+        radial-gradient(1200px 600px at 90% -10%, rgba(255, 255, 255, 0.08), transparent 60%),
+        radial-gradient(800px 400px at 5% 110%, rgba(255, 255, 255, 0.05), transparent 60%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 20%);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body.dragging {
+      cursor: grabbing;
+      user-select: none;
+    }
+
+    header {
       height: var(--headerH);
-      background:var(--primary);
-      color:#fff;
-      padding:10px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      font-weight:800;
-      gap:12px;
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 800;
+      gap: 12px;
     }
 
-    .hdr-left{
-      display:flex;
-      align-items:baseline;
-      gap:10px;
-      min-width:0;
+    .hdr-left {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      min-width: 0;
     }
 
-    .app-title{ white-space:nowrap; }
-    .countdown{
+    .app-title {
+      white-space: nowrap;
+    }
+
+    .countdown {
       font-variant-numeric: tabular-nums;
-      opacity:0.95;
-      font-weight:900;
-      background:rgba(255,255,255,0.18);
-      padding:4px 10px;
-      border-radius:999px;
-      white-space:nowrap;
+      opacity: 0.95;
+      font-weight: 900;
+      background: rgba(255, 255, 255, 0.18);
+      padding: 4px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
     }
 
-    .hdr-actions{
-      display:flex;
-      gap:10px;
-      align-items:center;
+    .hdr-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
 
-    .btn{
-      border:none;
-      border-radius:10px;
-      padding:8px 10px;
-      cursor:pointer;
-      font-weight:900;
-      line-height:1;
-      background:rgba(255,255,255,0.18);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      gap:8px;
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-weight: 900;
+      line-height: 1;
+      background: rgba(255, 255, 255, 0.18);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 160ms var(--ease), background 160ms var(--ease), box-shadow 160ms var(--ease);
     }
 
-    .accent-btn{
-      width:38px; height:34px;
-      justify-content:center;
-      padding:0;
-      position:relative;
-    }
-    .accent-dot{
-      width:16px;height:16px;border-radius:50%;
-      background:var(--primary);
-      border:2px solid rgba(255,255,255,0.75);
-      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    .btn:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.22);
     }
 
-    /* App layout */
-    .wrap{
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .accent-btn {
+      width: 38px;
+      height: 34px;
+      justify-content: center;
+      padding: 0;
+      position: relative;
+    }
+
+    .accent-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid rgba(255, 255, 255, 0.75);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    .wrap {
       height: calc(100vh - var(--headerH));
       max-width: 1200px;
       margin: 0 auto;
-      padding: 16px 14px;
-      display:grid;
+      padding: 16px 18px;
+      display: grid;
       grid-template-columns: 300px 1fr;
-      gap:14px;
-      overflow:hidden; /* key for independent scrolling panels */
+      gap: 14px;
+      overflow: hidden;
     }
 
-    .col{
-      min-height:0; /* allow children overflow scrolling */
-      display:flex;
-      flex-direction:column;
-      gap:12px;
+    .col {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    .col.left{
-      overflow:auto; /* independent scroll */
+    .col.left,
+    .col.right {
+      overflow: auto;
       padding-right: 2px;
     }
 
-    .col.right{
-      overflow:auto; /* independent scroll */
-      padding-right: 2px;
-    }
-
-    .card{
-      background:var(--card);
-      border-radius:var(--radius);
-      padding:12px;
-      box-shadow:var(--shadow);
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-soft);
+      background-image: none;
     }
 
     /* Calendar */
-    .cal-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      margin-bottom:8px;
-      gap:8px;
-    }
-    .cal-title{ font-weight:900; font-size:14px; }
-
-    .cal-nav{ display:flex; gap:8px; }
-    .iconbtn{
-      border:1px solid var(--border);
-      background:transparent;
-      color:var(--text);
-      border-radius:10px;
-      padding:5px 10px;
-      cursor:pointer;
-      font-weight:900;
+    .cal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      gap: 8px;
     }
 
-    .dow{
-      display:grid;
-      grid-template-columns:repeat(7,1fr);
-      gap:4px;
-      font-size:11px;
-      color:var(--muted);
-      margin-bottom:6px;
-      user-select:none;
-    }
-    .dow div{ text-align:center; padding:2px 0; }
-
-    .cal-grid{
-      display:grid;
-      grid-template-columns:repeat(7,1fr);
-      gap:4px;
+    .cal-title {
+      font-weight: 900;
+      font-size: 14px;
     }
 
-    .day{
-      text-align:center;
-      padding:7px 0;
-      border-radius:10px;
-      cursor:pointer;
-      user-select:none;
-      border:1px solid transparent;
-      font-size:12px;
+    .cal-nav {
+      display: flex;
+      gap: 8px;
     }
-    .day:hover{ border-color:var(--border); }
-    .day.blank{ cursor:default; opacity:0; pointer-events:none; }
-    .day.past{ color:var(--muted); opacity:0.75; }
-    .day.active{ background:var(--primary); color:#fff; }
-    .day.today{
+
+    .iconbtn {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .dow {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      user-select: none;
+    }
+
+    .dow div {
+      text-align: center;
+      padding: 2px 0;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .day {
+      text-align: center;
+      padding: 7px 0;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid transparent;
+      font-size: 12px;
+    }
+
+    .day:hover {
+      border-color: var(--border);
+    }
+
+    .day.blank {
+      cursor: default;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .day.past {
+      color: var(--muted);
+      opacity: 0.75;
+    }
+
+    .day.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .day.today {
       box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--primary) 55%, transparent);
     }
 
-    /* To-do (tightened padding) */
-    .todo-title{
-      font-weight:950;
-      margin:0 0 8px 0;
-      font-size:14px;
-    }
-    .todo-input{
-      width:100%;
-      border:1px solid var(--border);
-      border-radius:10px;
-      padding:9px 10px;
-      background:transparent;
-      color:var(--text);
-      outline:none;
-      margin-bottom:8px;
-      font-size:13px;
-    }
-    .todo-input:focus{
-      border-color:var(--focus);
-      box-shadow:0 0 0 3px rgba(80,160,255,0.18);
+    /* To-do */
+    .todo-card {
+      padding: 12px;
     }
 
-    .todo-list{
-      min-height:110px;
-      border:1px dashed var(--border);
-      border-radius:12px;
-      padding:6px;
+    .todo-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 8px;
     }
 
-    .item{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding:8px 10px;         /* tightened */
-      border:1px solid var(--border);
-      border-radius:12px;
-      margin:6px 0;
-      background:rgba(255,255,255,0.04);
-    }
-    body.light .item{ background: rgba(0,0,0,0.05); }
-
-    .handle{
-      width:22px;
-      height:22px;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      color:var(--handle);
-      cursor:grab;
-      user-select:none;
-      font-weight:900;
-      flex:0 0 22px;
-      border-radius:8px;
-    }
-    .handle:active{ cursor:grabbing; }
-    .item.dragging{
-      opacity:0.55;
-      transform: scale(0.99);
+    .todo-title {
+      font-weight: 900;
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -0.01em;
     }
 
-    .text{
-      flex:1;
-      color:var(--text);
-      font-size:13px;
-      line-height:1.2;
-      word-break:break-word;
+    .todo-count {
+      font-size: 11px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 999px;
+      min-width: 36px;
+      text-align: center;
     }
 
-    /* Drop indicator (between items / between rows) */
-    .dropzone{
-      height:var(--dzH);
-      border-radius:10px;
-      margin:2px 0;
-      position:relative;
+    .todo-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px 10px;
+      background: var(--surface);
+      margin-bottom: 8px;
+      min-height: 32px;
     }
-    .dropzone.active::after{
-      content:"";
-      position:absolute;
-      left:8px;
-      right:8px;
-      top:50%;
-      transform:translateY(-50%);
-      height:3px;
-      border-radius:3px;
-      background: color-mix(in srgb, var(--primary) 85%, white 15%);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+
+    .todo-input {
+      width: 100%;
+      border: none;
+      padding: 0;
+      background: transparent;
+      color: var(--text);
+      outline: none;
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .todo-input-wrap:focus-within {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px rgba(80, 160, 255, 0.18);
+    }
+
+    .todo-return {
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 4v7a4 4 0 0 1-4 4H5'/><polyline points='9 11 5 15 9 19'/></svg>");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 16px 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms var(--ease);
+    }
+
+    .todo-input-wrap:focus-within .todo-return {
+      opacity: 0.7;
+    }
+
+    .todo-list {
+      min-height: 100px;
+      border: none;
+      border-radius: 0;
+      padding: 2px 0 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: none;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: 20px 1fr 18px 18px;
+      align-items: center;
+      gap: 8px;
+      padding: var(--itemPad);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin: 0;
+      background: var(--surface);
+      transition: transform 220ms var(--ease-smooth), background 160ms var(--ease), border-color 160ms var(--ease), box-shadow 220ms var(--ease-smooth);
+      min-height: 32px;
+      position: relative;
+    }
+
+    body.light .item {
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    .item:hover {
+      background: var(--surface-strong);
+      border-color: color-mix(in srgb, var(--border) 70%, white 30%);
+      box-shadow: none;
+    }
+
+    .item.done .todo-text {
+      text-decoration: line-through;
+      color: color-mix(in srgb, var(--muted) 70%, var(--text));
+      opacity: 0.75;
+    }
+
+    .todo-text {
+      width: 100%;
+      color: var(--text);
+      font-size: 13px;
+      padding: 0;
+      outline: none;
+      background: transparent;
+      border: none;
+      line-height: 1.2;
+    }
+
+    .todo-text[contenteditable="true"]:focus {
+      outline: none;
+    }
+
+    .todo-delete {
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 160ms var(--ease), color 160ms var(--ease), border-color 160ms var(--ease), background 160ms var(--ease);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 5 6 21 6'/><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/><path d='M10 11v6'/><path d='M14 11v6'/><path d='M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2'/></svg>");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 12px 12px;
+    }
+
+    .item:hover .todo-delete {
+      opacity: 1;
+    }
+
+    .todo-delete:hover {
+      color: var(--text);
+      border-color: color-mix(in srgb, var(--border) 60%, white 40%);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .check {
+      width: var(--checkSize);
+      height: var(--checkSize);
+      accent-color: var(--primary);
+      cursor: pointer;
+      flex: 0 0 var(--checkSize);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms var(--ease);
+      position: relative;
+      z-index: 3;
+      justify-self: end;
+    }
+
+    .item:hover .check,
+    .row:hover .check,
+    .check:focus-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .handle {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--handle);
+      cursor: grab;
+      user-select: none;
+      font-weight: 900;
+      flex: 0 0 20px;
+      border-radius: 8px;
+      opacity: 0;
+      pointer-events: none;
+      align-self: center;
+      transition: background 160ms var(--ease), transform 180ms var(--ease-snap), opacity 160ms var(--ease);
+      transform: translateY(0);
+    }
+
+    .handle::before {
+      content: "";
+      width: 12px;
+      height: 16px;
+      display: block;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='16' viewBox='0 0 12 16' fill='%239a9a9a'><circle cx='3' cy='3' r='1.5'/><circle cx='3' cy='8' r='1.5'/><circle cx='3' cy='13' r='1.5'/><circle cx='9' cy='3' r='1.5'/><circle cx='9' cy='8' r='1.5'/><circle cx='9' cy='13' r='1.5'/></svg>");
+      background-repeat: no-repeat;
+      background-position: center;
+      opacity: 0.9;
+    }
+
+    .item:hover .handle,
+    .row:hover .handle,
+    .handle:focus-visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(-0.5px);
+    }
+
+    .handle:active {
+      cursor: grabbing;
+    }
+
+    .item.dragging {
+      opacity: 1 !important;
+      transform: scale(1.02) translateZ(0);
+      box-shadow: var(--lift);
+    }
+
+    .row.dragging {
+      opacity: 1 !important;
+      transform: scale(1.01) translateZ(0);
+      box-shadow: var(--lift);
+    }
+
+    .row.release,
+    .item.release {
+      transition: transform 380ms var(--ease-smooth);
+      transform: translateY(0);
+    }
+
+    .dropzone {
+      height: var(--dzH);
+      border-radius: 10px;
+      margin: 0;
+      position: relative;
+      transition: height 140ms var(--ease), transform 140ms var(--ease);
+      pointer-events: none;
+    }
+
+    .dropzone.active {
+      height: calc(var(--dzH) + 10px);
+      transform: scaleY(1.02);
+    }
+
+    .todo-list .dropzone {
+      height: 6px;
+    }
+
+    .todo-list .dropzone.active {
+      height: 10px;
+    }
+
+    .dropzone.active::after {
+      content: none;
+    }
+
+    .drag-ghost {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate3d(0, 0, 0);
+      box-shadow: var(--lift);
+      overflow: visible;
+      transition: transform 90ms linear, box-shadow 160ms var(--ease);
+    }
+
+    .drag-ghost.ghost-row {
+      display: grid;
+      grid-template-columns: 66px 20px 1fr 18px;
+      align-items: center;
+      gap: 8px;
+      padding: var(--rowPad);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .drag-ghost.ghost-row .ghost-text {
+      font-size: 13px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .drag-placeholder {
+      height: var(--dragGap, 32px);
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    .row.insert-gap {
+      margin-top: 0;
+      transform: translateY(0);
     }
 
     /* Schedule */
-    .sched-head{
-      display:flex;
-      align-items:baseline;
-      justify-content:space-between;
-      margin-bottom:10px;
-      gap:10px;
-    }
-    .sched-title{
-      font-weight:950;
-      margin:0;
-      font-size:14px;
-    }
-    .sched-sub{ color:var(--muted); font-size:11px; }
-
-    .blocks{
-      position:relative;
-      border:1px solid var(--border);
-      border-radius:12px;
-      overflow:hidden;
-      background: linear-gradient(to bottom, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    .sched-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 10px;
     }
 
-    .row{
-      height:var(--rowH);
-      display:grid;
-      grid-template-columns: 70px 26px 1fr;
-      align-items:center;
-      border-bottom:1px solid var(--border);
-      padding:0 8px;
-      gap:6px;
-      background:transparent;
+    .sched-title {
+      font-weight: 950;
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: -0.01em;
     }
-    .row:last-child{ border-bottom:none; }
-    .row.past{ opacity:var(--pastOpacity); }
 
-    .time{
-      color:var(--muted);
-      font-size:12px;
+    .sched-sub {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .blocks {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+    }
+
+    .row {
+      height: var(--rowH);
+      display: grid;
+      grid-template-columns: 66px 20px 1fr 18px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding: var(--rowPad);
+      gap: 8px;
+      background: transparent;
+      transition: background 160ms var(--ease), border-color 160ms var(--ease), transform 220ms var(--ease-smooth), margin-top 220ms var(--ease-smooth);
+    }
+
+    .row:last-child {
+      border-bottom: none;
+    }
+
+    .row.past {
+      opacity: 1;
+    }
+
+    .time {
+      color: var(--muted);
+      font-size: 12px;
       font-variant-numeric: tabular-nums;
-      user-select:none;
+      user-select: none;
     }
 
-    .editor{
-      height: calc(var(--rowH) - 10px);
+    .editor {
+      height: calc(var(--rowH) - 8px);
       width: 100%;
-      border:1px solid transparent;
-      border-radius:10px;
-      padding:8px 10px;
-      background:transparent;
-      color:var(--text);
-      outline:none;
-      font-size:13px;
-    }
-    .editor::placeholder{ color:var(--muted); }
-    .editor:focus{
-      border-color:var(--focus);
-      box-shadow:0 0 0 3px rgba(80,160,255,0.18);
-      background:rgba(255,255,255,0.04);
-    }
-    body.light .editor:focus{ background: rgba(0,0,0,0.03); }
-
-    .droptarget{
-      outline:2px solid rgba(90,180,255,0.55);
-      outline-offset:-2px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 6px 8px;
+      background: transparent;
+      color: var(--text);
+      outline: none;
+      font-size: 13px;
+      line-height: 1.2;
     }
 
-    /* Now line + pill */
-    .nowline{
-      position:absolute;
-      left:0;
-      right:0;
-      height:2px;
+    .editor::placeholder {
+      color: var(--muted);
+    }
+
+    .editor:focus {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px rgba(80, 160, 255, 0.18);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    body.light .editor:focus {
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    .droptarget {
+      outline: 2px solid rgba(90, 180, 255, 0.55);
+      outline-offset: -2px;
+      background: rgba(90, 180, 255, 0.08);
+      transform: scale(1.01);
+    }
+
+    .row:hover {
+      background: rgba(255, 255, 255, 0.045);
+      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+    }
+
+    .row.done .editor {
+      text-decoration: line-through;
+      color: color-mix(in srgb, var(--muted) 70%, var(--text));
+      opacity: 0.75;
+    }
+
+    .nowline {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
       background: var(--primary);
-      z-index:5;
-      pointer-events:none;
-    }
-    .nowpill{
-      position:absolute;
-      right:10px;
-      transform:translateY(-50%);
-      padding:3px 8px;
-      border-radius:999px;
-      background: var(--card);
-      border:1px solid color-mix(in srgb, var(--primary) 55%, var(--border));
-      color: var(--primary);
-      font-size:12px;
-      font-weight:950;
-      font-variant-numeric: tabular-nums;
-      z-index:6;
-      pointer-events:none;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+      z-index: 5;
+      pointer-events: none;
+      box-shadow: none;
     }
 
-    /* Popovers / modals */
-    .backdrop{
-      position:fixed; inset:0;
-      background:rgba(0,0,0,0.4);
-      display:none;
-      z-index:50;
+    .nowpill {
+      position: absolute;
+      right: 10px;
+      transform: translateY(-50%);
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 1px solid color-mix(in srgb, var(--primary) 55%, var(--border));
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+      z-index: 6;
+      pointer-events: none;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
     }
-    .popover{
-      position:fixed;
-      z-index:60;
+
+    /* Popovers */
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: none;
+      z-index: 50;
+    }
+
+    .popover {
+      position: fixed;
+      z-index: 60;
       width: 320px;
       background: var(--card);
-      border:1px solid var(--border);
-      border-radius:14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
       box-shadow: var(--shadow);
-      padding:12px;
-      display:none;
+      padding: 12px;
+      display: none;
     }
-    .pop-title{
-      font-weight:950;
+
+    .pop-title {
+      font-weight: 950;
       margin: 0 0 10px 0;
-      font-size:13px;
+      font-size: 13px;
     }
-    .row2{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin:8px 0;
+
+    .row2 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 8px 0;
     }
-    .label{ color:var(--muted); font-size:12px; }
-    .range{ width: 100%; }
-    .pill{
+
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .range {
+      width: 100%;
+    }
+
+    .pill {
       font-variant-numeric: tabular-nums;
-      border:1px solid var(--border);
-      padding:4px 8px;
-      border-radius:999px;
-      font-size:12px;
-      color:var(--text);
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--text);
       min-width: 74px;
-      text-align:center;
+      text-align: center;
     }
-    .preview{
-      height:34px;
-      border-radius:12px;
-      border:1px solid var(--border);
+
+    .preview {
+      height: 34px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
       background: var(--primary);
     }
-    .toggle{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      font-size:12px;
-      color:var(--text);
-      user-select:none;
-    }
-    .toggle input{ transform: translateY(1px); }
-    .divider{
-      height:1px;
-      background:var(--border);
-      margin:10px 0;
+
+    .sound-preview {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
     }
 
-    /* nicer scrollbars */
+    .segmented {
+      display: inline-flex;
+      gap: 4px;
+      padding: 2px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .time-select {
+      border: 1px solid var(--border);
+      background: #1f1f1f;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 12px;
+      min-width: 84px;
+      color-scheme: dark;
+    }
+
+    .time-select option {
+      background: #1f1f1f;
+      color: var(--text);
+    }
+
+    .seg-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: color 160ms var(--ease), background 160ms var(--ease);
+    }
+
+    .seg-btn.active {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .sound-btn {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .sound-btn:hover {
+      border-color: color-mix(in srgb, var(--border) 70%, white 30%);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text);
+      user-select: none;
+    }
+
+    .help-list {
+      margin: 8px 0 0;
+      padding-left: 16px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .help-list li {
+      margin: 6px 0;
+    }
+
+    .toggle input {
+      transform: translateY(1px);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 10px 0;
+    }
+
     .col.left::-webkit-scrollbar,
-    .col.right::-webkit-scrollbar{
-      width:10px;
+    .col.right::-webkit-scrollbar {
+      width: 10px;
     }
+
     .col.left::-webkit-scrollbar-thumb,
-    .col.right::-webkit-scrollbar-thumb{
-      background:rgba(255,255,255,0.12);
-      border-radius:999px;
-      border:2px solid transparent;
-      background-clip: padding-box;
-    }
-    body.light .col.left::-webkit-scrollbar-thumb,
-    body.light .col.right::-webkit-scrollbar-thumb{
-      background:rgba(0,0,0,0.15);
+    .col.right::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      border: 2px solid transparent;
       background-clip: padding-box;
     }
 
-    @media (max-width: 980px){
-      body{ overflow:auto; }
-      .wrap{
-        height:auto;
-        grid-template-columns: 1fr;
-        overflow:visible;
+    body.light .col.left::-webkit-scrollbar-thumb,
+    body.light .col.right::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.15);
+      background-clip: padding-box;
+    }
+
+    @media (max-width: 980px) {
+      body {
+        overflow: auto;
       }
-      .col.left, .col.right{ overflow:visible; }
+
+      .wrap {
+        height: auto;
+        grid-template-columns: 1fr;
+        overflow: visible;
+      }
+
+      .col.left,
+      .col.right {
+        overflow: visible;
+      }
     }
   </style>
 </head>
-
 <body>
-<header>
-  <div class="hdr-left">
-    <div class="app-title">Daily Scheduler</div>
-    <div id="countdown" class="countdown">--:--</div>
-  </div>
+  <header>
+    <div class="hdr-left">
+      <div class="app-title">Daily Scheduler</div>
+      <div id="countdown" class="countdown">--:--</div>
+    </div>
+    <div class="hdr-actions">
+      <button id="accentBtn" class="btn accent-btn" title="Accent color">
+        <span class="accent-dot" aria-hidden="true"></span>
+      </button>
+      <button id="soundBtn" class="btn" title="Sound settings">🔊</button>
+      <button id="settingsBtn" class="btn" title="Schedule settings">⚙️</button>
+      <button id="helpBtn" class="btn" title="Help">?</button>
+      <button id="darkBtn" class="btn" title="Toggle theme">☀️</button>
+    </div>
+  </header>
 
-  <div class="hdr-actions">
-    <button id="accentBtn" class="btn accent-btn" title="Accent color">
-      <span class="accent-dot" aria-hidden="true"></span>
-    </button>
+  <div class="wrap">
+    <div class="col left">
+      <div class="card">
+        <div class="cal-head">
+          <div class="cal-title" id="monthLabel"></div>
+          <div class="cal-nav">
+            <button class="iconbtn" id="prevMonth" aria-label="Previous month">‹</button>
+            <button class="iconbtn" id="nextMonth" aria-label="Next month">›</button>
+          </div>
+        </div>
 
-    <button id="soundBtn" class="btn" title="Sound settings">🔊</button>
-    <button id="darkBtn" class="btn" title="Toggle theme">☀️</button>
-  </div>
-</header>
+        <div class="dow">
+          <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+        </div>
 
-<div class="wrap">
-  <div class="col left">
-    <div class="card">
-      <div class="cal-head">
-        <div class="cal-title" id="monthLabel"></div>
-        <div class="cal-nav">
-          <button class="iconbtn" id="prevMonth" aria-label="Previous month">‹</button>
-          <button class="iconbtn" id="nextMonth" aria-label="Next month">›</button>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+      <div class="card todo-card">
+        <div class="todo-header">
+          <h3 class="todo-title">To Do</h3>
+          <div id="todoCount" class="todo-count">0</div>
+        </div>
+        <div class="todo-input-wrap">
+          <input id="todoInput" class="todo-input" placeholder="Add a task..." />
+          <span class="todo-return" aria-hidden="true"></span>
+        </div>
+        <div id="todoList" class="todo-list"></div>
+        <div class="label" style="margin-top:6px;">Drag using the handle. Drop between items to reorder.</div>
+      </div>
+    </div>
+
+    <div class="col right">
+      <div class="card">
+        <div class="sched-head">
+          <h3 class="sched-title" id="dateLabel"></h3>
+        <div id="schedSub" class="sched-sub">7:00 AM - 10:00 PM (30-min blocks)</div>
+        </div>
+
+        <div class="blocks" id="blocks">
+          <div class="nowline" id="nowLine" style="display:none"></div>
+          <div class="nowpill" id="nowPill" style="display:none"></div>
+          <div id="rows"></div>
         </div>
       </div>
-
-      <div class="dow">
-        <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
-      </div>
-
-      <div class="cal-grid" id="calGrid"></div>
-    </div>
-
-    <div class="card">
-      <h3 class="todo-title">To Do</h3>
-      <input id="todoInput" class="todo-input" placeholder="Add a todo and press Enter" />
-      <div id="todoList" class="todo-list"></div>
-      <div class="label" style="margin-top:8px;">
-        Drag using ⋮⋮. Drop between items to reorder.
-      </div>
     </div>
   </div>
 
-  <div class="col right">
-    <div class="card">
-      <div class="sched-head">
-        <h3 class="sched-title" id="dateLabel"></h3>
-        <div class="sched-sub">7:00 AM → 10:00 PM (30-min blocks)</div>
-      </div>
+  <div id="backdrop" class="backdrop"></div>
 
-      <div class="blocks" id="blocks">
-        <div class="nowline" id="nowLine" style="display:none"></div>
-        <div class="nowpill" id="nowPill" style="display:none"></div>
-        <div id="rows"></div>
-      </div>
+  <div id="accentPop" class="popover" role="dialog" aria-label="Accent color picker">
+    <div class="pop-title">Accent color (HSL)</div>
+    <div class="preview" id="accentPreview"></div>
+
+    <div class="row2">
+      <div class="label">Hue</div>
+      <div class="pill" id="hVal">0°</div>
+    </div>
+    <input id="hRange" class="range" type="range" min="0" max="360" value="330" />
+
+    <div class="row2">
+      <div class="label">Saturation</div>
+      <div class="pill" id="sVal">100%</div>
+    </div>
+    <input id="sRange" class="range" type="range" min="0" max="100" value="70" />
+
+    <div class="row2">
+      <div class="label">Lightness</div>
+      <div class="pill" id="lVal">50%</div>
+    </div>
+    <input id="lRange" class="range" type="range" min="0" max="100" value="60" />
+
+    <div class="divider"></div>
+    <div class="row2">
+      <div class="label">Hex</div>
+      <div class="pill" id="hexVal">#ff5aa5</div>
     </div>
   </div>
-</div>
 
-<!-- Popovers -->
-<div id="backdrop" class="backdrop"></div>
+  <div id="soundPop" class="popover" role="dialog" aria-label="Sound settings">
+    <div class="pop-title">Sound settings</div>
 
-<div id="accentPop" class="popover" role="dialog" aria-label="Accent color picker">
-  <div class="pop-title">Accent color (HSL)</div>
-  <div class="preview" id="accentPreview"></div>
+    <label class="toggle">
+      <input id="muteChk" type="checkbox" />
+      Mute
+    </label>
 
-  <div class="row2">
-    <div class="label">Hue</div>
-    <div class="pill" id="hVal">0°</div>
+    <div class="row2" style="margin-top:10px;">
+      <div class="label">Volume</div>
+      <div class="pill" id="volVal">60%</div>
+    </div>
+    <input id="volRange" class="range" type="range" min="0" max="100" value="60" />
+
+    <div class="divider"></div>
+
+    <label class="toggle">
+      <input id="onlyIfTaskChk" type="checkbox" />
+      Only play sounds when current block has a task
+    </label>
+
+    <div class="label" style="margin-top:10px;">
+      Plays a warning at 5 minutes remaining and another sound when the block ends.
+    </div>
+
+    <div class="row2">
+      <div class="label">Preview sounds</div>
+    </div>
+    <div class="sound-preview">
+      <button id="previewWarn" class="sound-btn" type="button">5-min warning</button>
+      <button id="previewEnd" class="sound-btn" type="button">Slot end</button>
+    </div>
   </div>
-  <input id="hRange" class="range" type="range" min="0" max="360" value="330"/>
 
-  <div class="row2">
-    <div class="label">Saturation</div>
-    <div class="pill" id="sVal">100%</div>
+  <div id="settingsPop" class="popover" role="dialog" aria-label="Schedule settings">
+    <div class="pop-title">Schedule settings</div>
+    <div class="row2">
+      <div class="label">Start</div>
+      <select id="startTime" class="time-select" aria-label="Start time"></select>
+    </div>
+    <div class="row2">
+      <div class="label">End</div>
+      <select id="endTime" class="time-select" aria-label="End time"></select>
+    </div>
+    <div class="divider"></div>
+    <div class="row2">
+      <div class="label">Schedule blocks</div>
+    </div>
+    <div class="segmented" role="group" aria-label="Slot length">
+      <button id="slot30" class="seg-btn" type="button">30 min</button>
+      <button id="slot60" class="seg-btn" type="button">60 min</button>
+    </div>
   </div>
-  <input id="sRange" class="range" type="range" min="0" max="100" value="70"/>
-
-  <div class="row2">
-    <div class="label">Lightness</div>
-    <div class="pill" id="lVal">50%</div>
+  <div id="helpPop" class="popover" role="dialog" aria-label="Help">
+    <div class="pop-title">Quick help</div>
+    <ul class="help-list">
+      <li>Click any time slot to type a task. Enter saves.</li>
+      <li>Drag the handle to reorder or move between To Do and Schedule.</li>
+      <li>Hover to reveal checkboxes and delete buttons.</li>
+      <li>Sound settings control alerts and previews.</li>
+      <li>Schedule settings change day range and block size.</li>
+    </ul>
   </div>
-  <input id="lRange" class="range" type="range" min="0" max="100" value="60"/>
+  <script>
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  <div class="divider"></div>
-  <div class="row2">
-    <div class="label">Hex</div>
-    <div class="pill" id="hexVal">#ff5aa5</div>
-  </div>
-</div>
-
-<div id="soundPop" class="popover" role="dialog" aria-label="Sound settings">
-  <div class="pop-title">Sound settings</div>
-
-  <label class="toggle">
-    <input id="muteChk" type="checkbox"/>
-    Mute
-  </label>
-
-  <div class="row2" style="margin-top:10px;">
-    <div class="label">Volume</div>
-    <div class="pill" id="volVal">60%</div>
-  </div>
-  <input id="volRange" class="range" type="range" min="0" max="100" value="60"/>
-
-  <div class="divider"></div>
-
-  <label class="toggle">
-    <input id="onlyIfTaskChk" type="checkbox"/>
-    Only play sounds when current block has a task
-  </label>
-
-  <div class="label" style="margin-top:10px;">
-    Plays a warning at 5 minutes remaining and another sound when the block ends.
-  </div>
-</div>
-
-<script>
-/* =========================
-   0) Utilities
-========================= */
-const $ = (sel, root=document) => root.querySelector(sel);
-const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-
-function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
-
-function safeParse(s){ try { return JSON.parse(s); } catch { return null; } }
-
-/* Local YYYY-MM-DD (no timezone drift) */
-function dateKey(d){
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
-  return `${y}-${m}-${day}`;
-}
-function isSameDay(a,b){
-  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
-}
-function isPastDay(d, today){
-  const a = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  const b = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-  return a < b;
-}
-
-/* Time helpers */
-const START_H = 7, END_H = 22, SLOT_MIN = 30;
-
-function timeString(h,m){ return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`; }
-function allTimes(){
-  const out = [];
-  for(let h=START_H; h<END_H; h++){
-    out.push(timeString(h,0));
-    out.push(timeString(h,30));
-  }
-  return out;
-}
-const TIMES = allTimes();
-
-function isPastTimeSlot(slotDate, tStr){
-  const today = new Date();
-  if(!isSameDay(slotDate, today)) return false;
-  const [hh, mm] = tStr.split(":").map(Number);
-  const t = new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate(), hh, mm, 0, 0);
-  return t.getTime() < Date.now();
-}
-
-function getCurrentBlockInfo(now=new Date()){
-  const mins = now.getHours()*60 + now.getMinutes();
-  const startM = START_H*60;
-  const endM = END_H*60;
-  if(mins < startM || mins >= endM) return null;
-
-  const minsInto = mins - startM;
-  const slotIndex = Math.floor(minsInto / SLOT_MIN); // 0..29
-  const slotStartMins = startM + slotIndex*SLOT_MIN;
-  const slotEndMins = slotStartMins + SLOT_MIN;
-  const remaining = slotEndMins - mins;
-
-  const startH = Math.floor(slotStartMins / 60);
-  const startMin = slotStartMins % 60;
-  const timeKey = timeString(startH, startMin);
-
-  return {
-    slotIndex,
-    timeKey,
-    slotStartMins,
-    slotEndMins,
-    remainingMins: remaining,
-    remainingSecs: (slotEndMins*60) - (now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds())
-  };
-}
-
-/* HSL <-> HEX */
-function hslToRgb(h, s, l){
-  s/=100; l/=100;
-  const c = (1 - Math.abs(2*l - 1)) * s;
-  const x = c * (1 - Math.abs((h/60) % 2 - 1));
-  const m = l - c/2;
-  let r=0,g=0,b=0;
-  if(0<=h && h<60){ r=c; g=x; b=0; }
-  else if(60<=h && h<120){ r=x; g=c; b=0; }
-  else if(120<=h && h<180){ r=0; g=c; b=x; }
-  else if(180<=h && h<240){ r=0; g=x; b=c; }
-  else if(240<=h && h<300){ r=x; g=0; b=c; }
-  else { r=c; g=0; b=x; }
-  return {
-    r: Math.round((r+m)*255),
-    g: Math.round((g+m)*255),
-    b: Math.round((b+m)*255)
-  };
-}
-function rgbToHex(r,g,b){
-  const to = (n)=> n.toString(16).padStart(2,"0");
-  return `#${to(r)}${to(g)}${to(b)}`;
-}
-function hslToHex(h,s,l){
-  const {r,g,b} = hslToRgb(h,s,l);
-  return rgbToHex(r,g,b);
-}
-function hexToRgb(hex){
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if(!m) return null;
-  return { r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16) };
-}
-function rgbToHsl(r,g,b){
-  r/=255; g/=255; b/=255;
-  const max = Math.max(r,g,b), min = Math.min(r,g,b);
-  let h=0, s=0;
-  const l = (max+min)/2;
-  const d = max-min;
-  if(d !== 0){
-    s = d/(1-Math.abs(2*l-1));
-    switch(max){
-      case r: h = 60*(((g-b)/d) % 6); break;
-      case g: h = 60*(((b-r)/d) + 2); break;
-      case b: h = 60*(((r-g)/d) + 4); break;
+    function clamp(n, a, b) {
+      return Math.max(a, Math.min(b, n));
     }
-  }
-  if(h<0) h+=360;
-  return { h: Math.round(h), s: Math.round(s*100), l: Math.round(l*100) };
-}
 
-/* =========================
-   1) State / Storage
-========================= */
-const STORE_KEY = "dailyScheduler_v4";
-const defaultState = {
-  settings: {
-    theme: "dark",         // "dark" | "light"
-    accent: "#ff5aa5",
-    accentHSL: { h: 330, s: 70, l: 60 },
-
-    sound: {
-      mute: false,
-      volume: 60,          // 0-100
-      onlyIfTask: true
+    function safeParse(s) {
+      try {
+        return JSON.parse(s);
+      } catch {
+        return null;
+      }
     }
-  },
-  todos: [],
-  schedules: {}            // { "YYYY-MM-DD": { "HH:MM": "task" } }
-};
 
-let state = safeParse(localStorage.getItem(STORE_KEY)) ?? structuredClone(defaultState);
+    function dateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
 
-function save(){
-  localStorage.setItem(STORE_KEY, JSON.stringify(state));
-}
+    function isSameDay(a, b) {
+      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
 
-function ensureSchedule(dk){
-  if(!state.schedules[dk]) state.schedules[dk] = {};
-  return state.schedules[dk];
-}
-function getSlotText(dk, t){ return state.schedules?.[dk]?.[t] ?? ""; }
-function setSlotText(dk, t, text){
-  ensureSchedule(dk);
-  if(!text || !text.trim()) delete state.schedules[dk][t];
-  else state.schedules[dk][t] = text;
-}
+    function isPastDay(d, today) {
+      const a = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+      const b = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+      return a < b;
+    }
 
-/* =========================
-   2) Theme
-========================= */
-function applyTheme(){
-  document.body.classList.toggle("light", state.settings.theme === "light");
-  document.documentElement.style.setProperty("--primary", state.settings.accent);
-  $("#darkBtn").textContent = (state.settings.theme === "light") ? "🌙" : "☀️";
-  // dot updates automatically via CSS variable
-}
-applyTheme();
+    let START_H = 7;
+    let END_H = 22;
+    let SLOT_MIN = 30;
 
-$("#darkBtn").addEventListener("click", ()=>{
-  state.settings.theme = (state.settings.theme === "light") ? "dark" : "light";
-  save(); applyTheme();
-});
+    function timeString(h, m) {
+      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    }
 
-/* =========================
-   3) Popover system (accent + sound)
-========================= */
-const backdrop = $("#backdrop");
-const accentPop = $("#accentPop");
-const soundPop = $("#soundPop");
-let openPop = null;
+    function allTimes(slotMin) {
+      const out = [];
+      for (let h = START_H; h < END_H; h += 1) {
+        out.push(timeString(h, 0));
+        if (slotMin === 30) out.push(timeString(h, 30));
+      }
+      return out;
+    }
 
-function openPopover(pop, anchorEl){
-  closePopover();
-  openPop = pop;
-  backdrop.style.display = "block";
-  pop.style.display = "block";
+    let TIMES = allTimes(SLOT_MIN);
 
-  // position near anchor
-  const r = anchorEl.getBoundingClientRect();
-  const popRect = pop.getBoundingClientRect();
-  const pad = 10;
-  let left = r.right - popRect.width;
-  let top = r.bottom + 10;
-  left = clamp(left, pad, window.innerWidth - popRect.width - pad);
-  top = clamp(top, pad, window.innerHeight - popRect.height - pad);
-  pop.style.left = `${left}px`;
-  pop.style.top = `${top}px`;
-}
+    function isPastTimeSlot(slotDate, tStr) {
+      const today = new Date();
+      if (!isSameDay(slotDate, today)) return false;
+      const [hh, mm] = tStr.split(":").map(Number);
+      const t = new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate(), hh, mm, 0, 0);
+      return t.getTime() < Date.now();
+    }
 
-function closePopover(){
-  backdrop.style.display = "none";
-  accentPop.style.display = "none";
-  soundPop.style.display = "none";
-  openPop = null;
-}
+    function getCurrentBlockInfo(now = new Date()) {
+      const mins = now.getHours() * 60 + now.getMinutes();
+      const startM = START_H * 60;
+      const endM = END_H * 60;
+      if (mins < startM || mins >= endM) return null;
 
-backdrop.addEventListener("click", closePopover);
-window.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closePopover(); });
+      const minsInto = mins - startM;
+      const slotIndex = Math.floor(minsInto / SLOT_MIN);
+      const slotStartMins = startM + slotIndex * SLOT_MIN;
+      const slotEndMins = slotStartMins + SLOT_MIN;
+      const remainingMins = slotEndMins - mins;
 
-/* Accent HSL popup */
-const hRange = $("#hRange");
-const sRange = $("#sRange");
-const lRange = $("#lRange");
-const hVal = $("#hVal");
-const sVal = $("#sVal");
-const lVal = $("#lVal");
-const hexVal = $("#hexVal");
-const accentPreview = $("#accentPreview");
+      const startH = Math.floor(slotStartMins / 60);
+      const startMin = slotStartMins % 60;
+      const timeKey = timeString(startH, startMin);
 
-function syncAccentUI(){
-  const {h,s,l} = state.settings.accentHSL;
-  hRange.value = h; sRange.value = s; lRange.value = l;
-  hVal.textContent = `${h}°`;
-  sVal.textContent = `${s}%`;
-  lVal.textContent = `${l}%`;
-  hexVal.textContent = state.settings.accent.toLowerCase();
-  accentPreview.style.background = state.settings.accent;
-}
+      return {
+        slotIndex,
+        timeKey,
+        slotStartMins,
+        slotEndMins,
+        remainingMins,
+        remainingSecs: slotEndMins * 60 - (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds())
+      };
+    }
 
-function commitAccentFromSliders(){
-  const h = Number(hRange.value);
-  const s = Number(sRange.value);
-  const l = Number(lRange.value);
-  const hex = hslToHex(h,s,l);
-  state.settings.accentHSL = {h,s,l};
-  state.settings.accent = hex;
-  save();
-  applyTheme();
-  syncAccentUI();
-}
+    function hslToRgb(h, s, l) {
+      s /= 100;
+      l /= 100;
+      const c = (1 - Math.abs(2 * l - 1)) * s;
+      const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+      const m = l - c / 2;
+      let r = 0;
+      let g = 0;
+      let b = 0;
+      if (h >= 0 && h < 60) {
+        r = c;
+        g = x;
+      } else if (h < 120) {
+        r = x;
+        g = c;
+      } else if (h < 180) {
+        g = c;
+        b = x;
+      } else if (h < 240) {
+        g = x;
+        b = c;
+      } else if (h < 300) {
+        r = x;
+        b = c;
+      } else {
+        r = c;
+        b = x;
+      }
+      return {
+        r: Math.round((r + m) * 255),
+        g: Math.round((g + m) * 255),
+        b: Math.round((b + m) * 255)
+      };
+    }
 
-[hRange, sRange, lRange].forEach(inp=>{
-  inp.addEventListener("input", commitAccentFromSliders);
-});
+    function rgbToHex(r, g, b) {
+      const to = (n) => n.toString(16).padStart(2, "0");
+      return `#${to(r)}${to(g)}${to(b)}`;
+    }
 
-$("#accentBtn").addEventListener("click", (e)=>{
-  // if we have hex but missing hsl, derive
-  if(!state.settings.accentHSL){
-    const rgb = hexToRgb(state.settings.accent || "#ff5aa5");
-    state.settings.accentHSL = rgb ? rgbToHsl(rgb.r,rgb.g,rgb.b) : {h:330,s:70,l:60};
-  }
-  syncAccentUI();
-  openPopover(accentPop, $("#accentBtn"));
-});
+    function hslToHex(h, s, l) {
+      const { r, g, b } = hslToRgb(h, s, l);
+      return rgbToHex(r, g, b);
+    }
 
-/* Sound popup */
-const muteChk = $("#muteChk");
-const volRange = $("#volRange");
-const volVal = $("#volVal");
-const onlyIfTaskChk = $("#onlyIfTaskChk");
+    function hexToRgb(hex) {
+      const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      if (!m) return null;
+      return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+    }
 
-function syncSoundUI(){
-  muteChk.checked = !!state.settings.sound.mute;
-  volRange.value = state.settings.sound.volume ?? 60;
-  volVal.textContent = `${volRange.value}%`;
-  onlyIfTaskChk.checked = !!state.settings.sound.onlyIfTask;
-}
+    function rgbToHsl(r, g, b) {
+      r /= 255;
+      g /= 255;
+      b /= 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0;
+      let s = 0;
+      const l = (max + min) / 2;
+      const d = max - min;
+      if (d !== 0) {
+        s = d / (1 - Math.abs(2 * l - 1));
+        switch (max) {
+          case r:
+            h = 60 * (((g - b) / d) % 6);
+            break;
+          case g:
+            h = 60 * ((b - r) / d + 2);
+            break;
+          case b:
+            h = 60 * ((r - g) / d + 4);
+            break;
+          default:
+            break;
+        }
+      }
+      if (h < 0) h += 360;
+      return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
+    }
 
-function commitSound(){
-  state.settings.sound.mute = muteChk.checked;
-  state.settings.sound.volume = Number(volRange.value);
-  state.settings.sound.onlyIfTask = onlyIfTaskChk.checked;
-  save();
-}
+    const STORE_KEY = "dailyScheduler_v5";
+    const defaultState = {
+      settings: {
+        theme: "dark",
+        accent: "#ff5aa5",
+        accentHSL: { h: 330, s: 70, l: 60 },
+        slotMinutes: 30,
+        dayStart: 7,
+        dayEnd: 22,
+        sound: {
+          mute: false,
+          volume: 60,
+          onlyIfTask: true
+        }
+      },
+      todos: [],
+      schedules: {}
+    };
 
-muteChk.addEventListener("change", commitSound);
-onlyIfTaskChk.addEventListener("change", commitSound);
-volRange.addEventListener("input", ()=>{
-  volVal.textContent = `${volRange.value}%`;
-  commitSound();
-});
+    function makeId() {
+      return `id_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+    }
 
-$("#soundBtn").addEventListener("click", ()=>{
-  syncSoundUI();
-  openPopover(soundPop, $("#soundBtn"));
-});
+    function normalizeTodo(entry) {
+      if (!entry) return null;
+      if (typeof entry === "string") return { id: makeId(), text: entry, done: false };
+      if (typeof entry === "object") {
+        return { id: entry.id || makeId(), text: entry.text ?? "", done: !!entry.done };
+      }
+      return null;
+    }
 
-/* =========================
-   4) Calendar
-========================= */
-const monthLabel = $("#monthLabel");
-const calGrid = $("#calGrid");
-const dateLabel = $("#dateLabel");
+    function normalizeScheduleItem(entry) {
+      if (!entry) return null;
+      if (typeof entry === "string") return { id: makeId(), text: entry, done: false };
+      if (typeof entry === "object") {
+        return { id: entry.id || makeId(), text: entry.text ?? "", done: !!entry.done };
+      }
+      return null;
+    }
 
-const today = new Date();
-let viewMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-let selected = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    let state = safeParse(localStorage.getItem(STORE_KEY)) ?? structuredClone(defaultState);
 
-$("#prevMonth").addEventListener("click", ()=>{
-  viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()-1, 1);
-  renderCalendar();
-});
-$("#nextMonth").addEventListener("click", ()=>{
-  viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1);
-  renderCalendar();
-});
+    function normalizeState() {
+      const baseSettings = structuredClone(defaultState.settings);
+      state.settings = { ...baseSettings, ...(state.settings ?? {}) };
+      state.settings.sound = { ...baseSettings.sound, ...(state.settings.sound ?? {}) };
+      state.settings.accentHSL = state.settings.accentHSL ?? structuredClone(baseSettings.accentHSL);
+      state.settings.slotMinutes = state.settings.slotMinutes ?? baseSettings.slotMinutes;
+      state.settings.dayStart = state.settings.dayStart ?? baseSettings.dayStart;
+      state.settings.dayEnd = state.settings.dayEnd ?? baseSettings.dayEnd;
+      state.todos = Array.isArray(state.todos) ? state.todos.map(normalizeTodo).filter(Boolean) : [];
+      if (!state.schedules || typeof state.schedules !== "object") state.schedules = {};
+      Object.keys(state.schedules).forEach((dk) => {
+        const sched = state.schedules[dk];
+        if (!sched || typeof sched !== "object") {
+          state.schedules[dk] = {};
+          return;
+        }
+        Object.keys(sched).forEach((t) => {
+          const normalized = normalizeScheduleItem(sched[t]);
+          if (normalized && normalized.text) sched[t] = normalized;
+          else delete sched[t];
+        });
+      });
+    }
 
-function renderCalendar(){
-  calGrid.innerHTML = "";
-  monthLabel.textContent = viewMonth.toLocaleString(undefined, { month:"long", year:"numeric" });
+    normalizeState();
+    START_H = state.settings.dayStart ?? 7;
+    END_H = state.settings.dayEnd ?? 22;
+    SLOT_MIN = state.settings.slotMinutes ?? 30;
+    TIMES = allTimes(SLOT_MIN);
+    save();
 
-  const first = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
-  const last = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 0);
+    function save() {
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    }
 
-  const blanks = first.getDay();
-  for(let i=0;i<blanks;i++){
-    const b = document.createElement("div");
-    b.className = "day blank";
-    calGrid.appendChild(b);
-  }
+    function ensureSchedule(dk) {
+      if (!state.schedules[dk]) state.schedules[dk] = {};
+      return state.schedules[dk];
+    }
 
-  for(let day=1; day<=last.getDate(); day++){
-    const d = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), day);
-    const cell = document.createElement("div");
-    cell.className = "day";
-    cell.textContent = day;
+    function getSlotText(dk, t) {
+      return state.schedules?.[dk]?.[t]?.text ?? "";
+    }
 
-    if(isPastDay(d, today)) cell.classList.add("past");
-    if(isSameDay(d, today)) cell.classList.add("today");
-    if(isSameDay(d, selected)) cell.classList.add("active");
+    function getSlotItem(dk, t) {
+      return state.schedules?.[dk]?.[t] ?? null;
+    }
 
-    cell.addEventListener("click", ()=>{
-      selected = d;
-      renderCalendar();
-      renderSchedule();
-      // refresh countdown/title on date switch
-      tickCountdown(true);
-      updateNowLine();
+    function setSlotText(dk, t, text) {
+      ensureSchedule(dk);
+      const trimmed = text.trim();
+      if (!trimmed) {
+        delete state.schedules[dk][t];
+        return;
+      }
+      const existing = state.schedules[dk][t];
+      if (existing) {
+        existing.text = text;
+      } else {
+        state.schedules[dk][t] = { id: makeId(), text, done: false };
+      }
+    }
+
+    function setSlotItem(dk, t, item) {
+      ensureSchedule(dk);
+      if (!item || !item.text || !item.text.trim()) {
+        delete state.schedules[dk][t];
+        return;
+      }
+      state.schedules[dk][t] = item;
+    }
+
+    function setSlotDone(dk, t, done) {
+      const item = getSlotItem(dk, t);
+      if (!item) return;
+      item.done = !!done;
+    }
+
+    function applyTheme() {
+      document.body.classList.toggle("light", state.settings.theme === "light");
+      document.documentElement.style.setProperty("--primary", state.settings.accent);
+      $("#darkBtn").textContent = state.settings.theme === "light" ? "🌙" : "☀️";
+    }
+
+    applyTheme();
+
+    $("#darkBtn").addEventListener("click", () => {
+      state.settings.theme = state.settings.theme === "light" ? "dark" : "light";
+      save();
+      applyTheme();
     });
 
-    calGrid.appendChild(cell);
-  }
-}
+    const backdrop = $("#backdrop");
+    const accentPop = $("#accentPop");
+    const soundPop = $("#soundPop");
+    const helpPop = $("#helpPop");
+    const settingsPop = $("#settingsPop");
+    const slot30Btn = $("#slot30");
+    const slot60Btn = $("#slot60");
+    const startTimeSel = $("#startTime");
+    const endTimeSel = $("#endTime");
+    let openPop = null;
 
-/* =========================
-   5) Modular Drag & Drop Engine (shared)
-   - Supports "drop between" via dropzones
-   - Supports "drop on item" via swap logic (optional)
-========================= */
-const drag = {
-  type: null,        // "todo" | "slot"
-  fromList: null,    // "todo" or "schedule"
-  fromIndex: null,   // index in todos (if todo)
-  fromDateKey: null,
-  fromTime: null,
-  payload: "",       // text
-  draggingEl: null
-};
+    function openPopover(pop, anchorEl) {
+      closePopover();
+      openPop = pop;
+      backdrop.style.display = "block";
+      pop.style.display = "block";
 
-function clearDrag(){
-  drag.type = null;
-  drag.fromList = null;
-  drag.fromIndex = null;
-  drag.fromDateKey = null;
-  drag.fromTime = null;
-  drag.payload = "";
-  if(drag.draggingEl) drag.draggingEl.classList.remove("dragging");
-  drag.draggingEl = null;
-}
+      const r = anchorEl.getBoundingClientRect();
+      const popRect = pop.getBoundingClientRect();
+      const pad = 10;
+      let left = r.right - popRect.width;
+      let top = r.bottom + 10;
+      left = clamp(left, pad, window.innerWidth - popRect.width - pad);
+      top = clamp(top, pad, window.innerHeight - popRect.height - pad);
+      pop.style.left = `${left}px`;
+      pop.style.top = `${top}px`;
+    }
 
-function setTransparentDragImage(e){
-  // A tiny transparent image makes the native drag ghost less annoying,
-  // then our UI indicators do the work (closer to your GIF feel).
-  const img = new Image();
-  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>`
-  );
-  e.dataTransfer.setDragImage(img, 0, 0);
-}
+    function closePopover() {
+      backdrop.style.display = "none";
+      accentPop.style.display = "none";
+      soundPop.style.display = "none";
+      helpPop.style.display = "none";
+      settingsPop.style.display = "none";
+      openPop = null;
+    }
 
-function makeDropzone(onDrop){
-  const dz = document.createElement("div");
-  dz.className = "dropzone";
-  dz.addEventListener("dragover", (e)=>{ e.preventDefault(); dz.classList.add("active"); });
-  dz.addEventListener("dragleave", ()=> dz.classList.remove("active"));
-  dz.addEventListener("drop", (e)=>{
-    e.preventDefault();
-    dz.classList.remove("active");
-    onDrop();
-  });
-  return dz;
-}
+    backdrop.addEventListener("click", closePopover);
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closePopover();
+    });
 
-/* =========================
-   6) To-do
-========================= */
-const todoInput = $("#todoInput");
-const todoList = $("#todoList");
+    const hRange = $("#hRange");
+    const sRange = $("#sRange");
+    const lRange = $("#lRange");
+    const hVal = $("#hVal");
+    const sVal = $("#sVal");
+    const lVal = $("#lVal");
+    const hexVal = $("#hexVal");
+    const accentPreview = $("#accentPreview");
 
-todoInput.addEventListener("keydown", (e)=>{
-  if(e.key === "Enter"){
-    const v = todoInput.value.trim();
-    if(!v) return;
-    state.todos.push(v);
-    todoInput.value = "";
-    save();
-    renderTodos();
-  }
-});
+    function syncAccentUI() {
+      const { h, s, l } = state.settings.accentHSL;
+      hRange.value = h;
+      sRange.value = s;
+      lRange.value = l;
+      hVal.textContent = `${h}°`;
+      sVal.textContent = `${s}%`;
+      lVal.textContent = `${l}%`;
+      hexVal.textContent = state.settings.accent.toLowerCase();
+      accentPreview.style.background = state.settings.accent;
+    }
 
-function renderTodos(){
-  todoList.innerHTML = "";
+    function commitAccentFromSliders() {
+      const h = Number(hRange.value);
+      const s = Number(sRange.value);
+      const l = Number(lRange.value);
+      const hex = hslToHex(h, s, l);
+      state.settings.accentHSL = { h, s, l };
+      state.settings.accent = hex;
+      save();
+      applyTheme();
+      syncAccentUI();
+    }
 
-  // top drop
+    [hRange, sRange, lRange].forEach((inp) => {
+      inp.addEventListener("input", commitAccentFromSliders);
+    });
+
+    $("#accentBtn").addEventListener("click", () => {
+      if (!state.settings.accentHSL) {
+        const rgb = hexToRgb(state.settings.accent || "#ff5aa5");
+        state.settings.accentHSL = rgb ? rgbToHsl(rgb.r, rgb.g, rgb.b) : { h: 330, s: 70, l: 60 };
+      }
+      syncAccentUI();
+      openPopover(accentPop, $("#accentBtn"));
+    });
+
+    const muteChk = $("#muteChk");
+    const volRange = $("#volRange");
+    const volVal = $("#volVal");
+    const onlyIfTaskChk = $("#onlyIfTaskChk");
+
+    function syncSoundUI() {
+      muteChk.checked = !!state.settings.sound.mute;
+      volRange.value = state.settings.sound.volume ?? 60;
+      volVal.textContent = `${volRange.value}%`;
+      onlyIfTaskChk.checked = !!state.settings.sound.onlyIfTask;
+    }
+
+    function syncScheduleUI() {
+      if (slot30Btn && slot60Btn) {
+        const is60 = state.settings.slotMinutes === 60;
+        slot30Btn.classList.toggle("active", !is60);
+        slot60Btn.classList.toggle("active", is60);
+      }
+      if (startTimeSel && endTimeSel) {
+        startTimeSel.value = String(state.settings.dayStart ?? 7);
+        endTimeSel.value = String(state.settings.dayEnd ?? 22);
+      }
+    }
+
+    function commitSound() {
+      state.settings.sound.mute = muteChk.checked;
+      state.settings.sound.volume = Number(volRange.value);
+      state.settings.sound.onlyIfTask = onlyIfTaskChk.checked;
+      save();
+    }
+
+    function updateScheduleSubtitle() {
+      const sub = $("#schedSub");
+      if (!sub) return;
+      const label = SLOT_MIN === 60 ? "60-min blocks" : "30-min blocks";
+      sub.textContent = `${timeString(START_H, 0)} - ${timeString(END_H, 0)} (${label})`;
+    }
+
+    function setSlotMinutes(minutes) {
+      const next = minutes === 60 ? 60 : 30;
+      if (state.settings.slotMinutes === next) return;
+      state.settings.slotMinutes = next;
+      SLOT_MIN = next;
+      TIMES = allTimes(SLOT_MIN);
+      save();
+      syncScheduleUI();
+      updateScheduleSubtitle();
+      renderSchedule();
+      tickCountdown(true);
+      updateNowLine();
+    }
+
+    function rebuildTimes() {
+      TIMES = allTimes(SLOT_MIN);
+      updateScheduleSubtitle();
+      renderSchedule();
+      tickCountdown(true);
+      updateNowLine();
+    }
+
+    function populateTimeSelects() {
+      if (!startTimeSel || !endTimeSel) return;
+      startTimeSel.innerHTML = "";
+      endTimeSel.innerHTML = "";
+      for (let h = 0; h <= 23; h += 1) {
+        const label = timeString(h, 0);
+        const optA = document.createElement("option");
+        optA.value = String(h);
+        optA.textContent = label;
+        const optB = optA.cloneNode(true);
+        startTimeSel.appendChild(optA);
+        endTimeSel.appendChild(optB);
+      }
+    }
+
+    muteChk.addEventListener("change", commitSound);
+    onlyIfTaskChk.addEventListener("change", commitSound);
+    volRange.addEventListener("input", () => {
+      volVal.textContent = `${volRange.value}%`;
+      commitSound();
+    });
+
+    $("#soundBtn").addEventListener("click", () => {
+      syncSoundUI();
+      openPopover(soundPop, $("#soundBtn"));
+    });
+
+    $("#settingsBtn").addEventListener("click", () => {
+      syncScheduleUI();
+      openPopover(settingsPop, $("#settingsBtn"));
+    });
+    $("#helpBtn").addEventListener("click", () => {
+      openPopover(helpPop, $("#helpBtn"));
+    });
+
+    if (slot30Btn) slot30Btn.addEventListener("click", () => setSlotMinutes(30));
+    if (slot60Btn) slot60Btn.addEventListener("click", () => setSlotMinutes(60));
+
+    populateTimeSelects();
+    if (startTimeSel) {
+      startTimeSel.addEventListener("change", () => {
+        const nextStart = Number(startTimeSel.value);
+        if (Number.isNaN(nextStart)) return;
+        const endVal = state.settings.dayEnd ?? 22;
+        state.settings.dayStart = Math.min(nextStart, endVal - 1);
+        START_H = state.settings.dayStart;
+        save();
+        syncScheduleUI();
+        rebuildTimes();
+      });
+    }
+
+    if (endTimeSel) {
+      endTimeSel.addEventListener("change", () => {
+        const nextEnd = Number(endTimeSel.value);
+        if (Number.isNaN(nextEnd)) return;
+        const startVal = state.settings.dayStart ?? 7;
+        state.settings.dayEnd = Math.max(nextEnd, startVal + 1);
+        END_H = state.settings.dayEnd;
+        save();
+        syncScheduleUI();
+        rebuildTimes();
+      });
+    }
+
+    const previewWarnBtn = $("#previewWarn");
+    const previewEndBtn = $("#previewEnd");
+    if (previewWarnBtn) {
+      previewWarnBtn.addEventListener("click", () => {
+        playWarningSound(true);
+      });
+    }
+    if (previewEndBtn) {
+      previewEndBtn.addEventListener("click", () => {
+        playEndSound(true);
+      });
+    }
+
+    const monthLabel = $("#monthLabel");
+    const calGrid = $("#calGrid");
+    const dateLabel = $("#dateLabel");
+
+    const today = new Date();
+    let viewMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    let selected = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    $("#prevMonth").addEventListener("click", () => {
+      viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1);
+      renderCalendar();
+    });
+
+    $("#nextMonth").addEventListener("click", () => {
+      viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1);
+      renderCalendar();
+    });
+
+    function renderCalendar() {
+      calGrid.innerHTML = "";
+      monthLabel.textContent = viewMonth.toLocaleString(undefined, { month: "long", year: "numeric" });
+
+      const first = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
+      const last = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0);
+
+      const blanks = first.getDay();
+      for (let i = 0; i < blanks; i += 1) {
+        const b = document.createElement("div");
+        b.className = "day blank";
+        calGrid.appendChild(b);
+      }
+
+      for (let day = 1; day <= last.getDate(); day += 1) {
+        const d = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), day);
+        const cell = document.createElement("div");
+        cell.className = "day";
+        cell.textContent = day;
+
+        if (isPastDay(d, today)) cell.classList.add("past");
+        if (isSameDay(d, today)) cell.classList.add("today");
+        if (isSameDay(d, selected)) cell.classList.add("active");
+
+        cell.addEventListener("click", () => {
+          selected = d;
+          renderCalendar();
+          renderSchedule();
+          tickCountdown(true);
+          updateNowLine();
+        });
+
+        calGrid.appendChild(cell);
+      }
+    }
+
+    let hoveredRow = null;
+
+    function clearDragStyles() {
+      $$(".dropzone.active").forEach((el) => el.classList.remove("active"));
+      $$(".droptarget").forEach((el) => el.classList.remove("droptarget"));
+      $$(".row.insert-gap").forEach((el) => el.classList.remove("insert-gap"));
+      hoveredRow = null;
+    }
+
+
+    function createHandle(config) {
+      const handle = document.createElement("div");
+      handle.className = "handle";
+      handle.draggable = false;
+      handle.addEventListener("pointerdown", (e) => startPointerDrag(e, config));
+      return handle;
+    }
+
+    const pointerDrag = {
+      active: false,
+      type: null,
+      fromIndex: null,
+      fromTime: null,
+      fromDateKey: null,
+      sourceEl: null,
+      ghostEl: null,
+      placeholderEl: null,
+      offsetX: 0,
+      offsetY: 0,
+      targetType: null,
+      targetIndex: null,
+      pointerId: null,
+      handleEl: null,
+      pending: false,
+      startX: 0,
+      startY: 0,
+      originalTime: null
+    };
+
+    function resetScheduleTimes() {
+      rowsEl.querySelectorAll(".row").forEach((row) => {
+        const timeEl = row.querySelector(".time");
+        if (timeEl && row.dataset.time) timeEl.textContent = row.dataset.time;
+      });
+    }
+
+    function applySchedulePreviewTimes(rows, targetIdx) {
+      rows.forEach((row, i) => {
+        const timeEl = row.querySelector(".time");
+        if (!timeEl) return;
+        const timeIndex = i >= targetIdx ? i + 1 : i;
+        timeEl.textContent = TIMES[timeIndex] ?? row.dataset.time;
+      });
+    }
+
+    function startPointerDrag(e, config) {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      pointerDrag.pending = true;
+      pointerDrag.pointerId = e.pointerId;
+      pointerDrag.handleEl = e.currentTarget;
+      pointerDrag.startX = e.clientX;
+      pointerDrag.startY = e.clientY;
+      pointerDrag.type = config.type;
+      pointerDrag.fromIndex = config.fromIndex ?? null;
+      pointerDrag.fromTime = config.fromTime ?? null;
+      pointerDrag.fromDateKey = config.fromDateKey ?? null;
+      pointerDrag.originalTime = config.fromTime ?? null;
+      pointerDrag.sourceEl = config.draggingEl ?? null;
+      pointerDrag.targetType = null;
+      pointerDrag.targetIndex = null;
+
+      if (!pointerDrag.sourceEl) return;
+
+      if (pointerDrag.handleEl?.setPointerCapture) {
+        pointerDrag.handleEl.setPointerCapture(pointerDrag.pointerId);
+      }
+
+      document.addEventListener("pointermove", onPointerMove);
+      document.addEventListener("pointerup", onPointerUp, { once: true });
+      document.addEventListener("pointercancel", onPointerCancel, { once: true });
+    }
+
+    function beginPointerDrag(e) {
+      pointerDrag.active = true;
+      pointerDrag.pending = false;
+      const rect = pointerDrag.sourceEl.getBoundingClientRect();
+      pointerDrag.offsetX = e.clientX - rect.left;
+      pointerDrag.offsetY = e.clientY - rect.top;
+      document.documentElement.style.setProperty("--dragGap", `${Math.round(rect.height)}px`);
+
+      const ghost = pointerDrag.sourceEl.cloneNode(true);
+      ghost.classList.add("drag-ghost");
+      if (pointerDrag.type === "todo") {
+        ghost.classList.add("ghost-row");
+        const todoText = pointerDrag.sourceEl.querySelector(".todo-text")?.textContent ?? "";
+        ghost.innerHTML = "";
+        const time = document.createElement("div");
+        time.className = "time";
+        time.textContent = "";
+        const handleSpacer = document.createElement("div");
+        const text = document.createElement("div");
+        text.className = "ghost-text";
+        text.textContent = todoText;
+        const checkSpacer = document.createElement("div");
+        ghost.append(time, handleSpacer, text, checkSpacer);
+      }
+      ghost.style.width = `${rect.width}px`;
+      ghost.style.height = `${rect.height}px`;
+      ghost.style.transform = `translate3d(${rect.left}px, ${rect.top}px, 0)`;
+      document.body.appendChild(ghost);
+      pointerDrag.ghostEl = ghost;
+
+      pointerDrag.sourceEl.classList.add("dragging");
+      document.body.classList.add("dragging");
+      pointerDrag.sourceEl.style.display = "none";
+
+      if (pointerDrag.type === "todo") {
+        const placeholder = document.createElement("div");
+        placeholder.className = "drag-placeholder";
+        pointerDrag.placeholderEl = placeholder;
+        todoList.insertBefore(placeholder, pointerDrag.sourceEl.nextSibling);
+      }
+    }
+
+    function setGhostTimeLabel(timeText) {
+      if (!pointerDrag.ghostEl) return;
+      const timeEl = pointerDrag.ghostEl.querySelector(".time");
+      if (timeEl) {
+        timeEl.textContent = timeText || "";
+        return;
+      }
+      const badge = pointerDrag.ghostEl.querySelector(".ghost-time");
+      if (!timeText) {
+        if (badge) badge.remove();
+        return;
+      }
+      const nextBadge = badge || document.createElement("div");
+      nextBadge.className = "ghost-time";
+      nextBadge.textContent = timeText;
+      if (!badge) pointerDrag.ghostEl.appendChild(nextBadge);
+    }
+
+    function updateGhostPosition(x, y) {
+      if (!pointerDrag.ghostEl) return;
+      const left = x - pointerDrag.offsetX;
+      const top = y - pointerDrag.offsetY;
+      pointerDrag.ghostEl.style.transform = `translate3d(${left}px, ${top}px, 0)`;
+    }
+
+    function onPointerMove(e) {
+      if (pointerDrag.pending) {
+        const dx = e.clientX - pointerDrag.startX;
+        const dy = e.clientY - pointerDrag.startY;
+        if (Math.hypot(dx, dy) < 4) return;
+        beginPointerDrag(e);
+      }
+      if (!pointerDrag.active) return;
+      updateGhostPosition(e.clientX, e.clientY);
+
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const scheduleRect = rowsEl.getBoundingClientRect();
+      const overSchedule =
+        e.clientX >= scheduleRect.left &&
+        e.clientX <= scheduleRect.right &&
+        e.clientY >= scheduleRect.top &&
+        e.clientY <= scheduleRect.bottom;
+
+      if (overSchedule) {
+        const rows = Array.from(rowsEl.querySelectorAll(".row")).filter((row) => row !== pointerDrag.sourceEl);
+        let targetIdx = rows.length;
+        for (let i = 0; i < rows.length; i += 1) {
+          const r = rows[i].getBoundingClientRect();
+          if (e.clientY < r.top + r.height / 2) {
+            targetIdx = i;
+            break;
+          }
+        }
+        pointerDrag.targetType = "schedule";
+        pointerDrag.targetIndex = targetIdx;
+        if (!pointerDrag.placeholderEl) {
+          const placeholder = document.createElement("div");
+          placeholder.className = "drag-placeholder";
+          pointerDrag.placeholderEl = placeholder;
+        }
+        const targetRow = rows[targetIdx] ?? null;
+        rowsEl.insertBefore(pointerDrag.placeholderEl, targetRow);
+        applySchedulePreviewTimes(rows, targetIdx);
+        if (pointerDrag.type === "slot" || pointerDrag.type === "todo") {
+          const previewTime = TIMES[Math.min(targetIdx, TIMES.length - 1)] ?? pointerDrag.originalTime;
+          setGhostTimeLabel(previewTime);
+        }
+        if (hoveredRow) hoveredRow.classList.remove("insert-gap");
+        hoveredRow = null;
+        return;
+      }
+
+      if (el && todoList.contains(el)) {
+        pointerDrag.targetType = "todo";
+        if (!pointerDrag.placeholderEl) {
+          const placeholder = document.createElement("div");
+          placeholder.className = "drag-placeholder";
+          pointerDrag.placeholderEl = placeholder;
+        }
+        const items = Array.from(todoList.querySelectorAll(".item")).filter((item) => item !== pointerDrag.sourceEl);
+        let targetIndex = items.length;
+        for (let i = 0; i < items.length; i += 1) {
+          const r = items[i].getBoundingClientRect();
+          if (e.clientY < r.top + r.height / 2) {
+            targetIndex = i;
+            break;
+          }
+        }
+        pointerDrag.targetIndex = targetIndex;
+        if (pointerDrag.placeholderEl) {
+          const beforeEl = items[targetIndex] ?? null;
+          todoList.insertBefore(pointerDrag.placeholderEl, beforeEl);
+        }
+        if (pointerDrag.type === "slot" && pointerDrag.originalTime) {
+          setGhostTimeLabel(pointerDrag.originalTime);
+        } else if (pointerDrag.type === "todo") {
+          setGhostTimeLabel("");
+        }
+        resetScheduleTimes();
+        if (hoveredRow) hoveredRow.classList.remove("insert-gap");
+        hoveredRow = null;
+        return;
+      }
+
+      if (pointerDrag.type === "slot" && pointerDrag.originalTime) {
+        setGhostTimeLabel(pointerDrag.originalTime);
+      } else if (pointerDrag.type === "todo") {
+        setGhostTimeLabel("");
+      }
+      resetScheduleTimes();
+      if (hoveredRow) hoveredRow.classList.remove("insert-gap");
+      hoveredRow = null;
+    }
+
+    function finalizePointerDrag() {
+      if (pointerDrag.handleEl?.releasePointerCapture && pointerDrag.pointerId != null) {
+        pointerDrag.handleEl.releasePointerCapture(pointerDrag.pointerId);
+      }
+      if (pointerDrag.sourceEl) {
+        pointerDrag.sourceEl.classList.remove("dragging");
+        pointerDrag.sourceEl.style.display = "";
+        pointerDrag.sourceEl.style.visibility = "";
+      }
+      if (pointerDrag.ghostEl) pointerDrag.ghostEl.remove();
+      if (pointerDrag.placeholderEl) pointerDrag.placeholderEl.remove();
+      document.body.classList.remove("dragging");
+      document.documentElement.style.removeProperty("--dragGap");
+      clearDragStyles();
+      resetScheduleTimes();
+      pointerDrag.active = false;
+      pointerDrag.type = null;
+      pointerDrag.fromIndex = null;
+      pointerDrag.fromTime = null;
+      pointerDrag.fromDateKey = null;
+      pointerDrag.sourceEl = null;
+      pointerDrag.ghostEl = null;
+      pointerDrag.placeholderEl = null;
+      pointerDrag.targetType = null;
+      pointerDrag.targetIndex = null;
+      pointerDrag.pointerId = null;
+      pointerDrag.handleEl = null;
+      pointerDrag.originalTime = null;
+    }
+
+    function onPointerCancel() {
+      document.removeEventListener("pointermove", onPointerMove);
+      finalizePointerDrag();
+    }
+
+    function onPointerUp() {
+      document.removeEventListener("pointermove", onPointerMove);
+      if (pointerDrag.pending) {
+        finalizePointerDrag();
+        return;
+      }
+      if (!pointerDrag.active) return;
+
+      const targetType = pointerDrag.targetType;
+      const targetIndex = pointerDrag.targetIndex;
+      const dk = dateKey(selected);
+
+      if (targetType === "todo" && pointerDrag.type === "todo" && targetIndex != null) {
+        const from = pointerDrag.fromIndex;
+        if (from != null) {
+          const [moved] = state.todos.splice(from, 1);
+          const insertIdx = Math.max(0, targetIndex);
+          state.todos.splice(insertIdx, 0, moved);
+        }
+      } else if (targetType === "schedule" && pointerDrag.type === "todo" && targetIndex != null) {
+        const item = state.todos[pointerDrag.fromIndex];
+        if (item) {
+          const targetTime = TIMES[Math.min(targetIndex, TIMES.length - 1)];
+          const inserted = insertIntoSchedule(dk, targetTime, item);
+          if (inserted) state.todos.splice(pointerDrag.fromIndex, 1);
+        }
+      } else if (targetType === "schedule" && pointerDrag.type === "slot" && targetIndex != null) {
+        const fromIdx = TIMES.indexOf(pointerDrag.fromTime);
+        if (fromIdx !== -1) {
+          const arr = getScheduleArray(dk);
+          const toIdx = Math.min(targetIndex, arr.length);
+          if (fromIdx !== toIdx) {
+            const [moved] = arr.splice(fromIdx, 1);
+            const insertIdx = Math.min(toIdx, arr.length);
+            arr.splice(insertIdx, 0, moved);
+            setScheduleFromArray(dk, arr);
+          }
+        }
+      } else if (targetType === "todo" && pointerDrag.type === "slot") {
+        const item = getSlotItem(pointerDrag.fromDateKey, pointerDrag.fromTime);
+        if (item) {
+          deleteSlot(pointerDrag.fromDateKey, pointerDrag.fromTime);
+          const insertIdx = Math.min(pointerDrag.targetIndex ?? state.todos.length, state.todos.length);
+          state.todos.splice(insertIdx, 0, item);
+        }
+      }
+
+      save();
+      renderTodos();
+      renderSchedule();
+      const released = document.querySelectorAll(".row, .item");
+      released.forEach((el) => el.classList.add("release"));
+      setTimeout(() => released.forEach((el) => el.classList.remove("release")), 340);
+      finalizePointerDrag();
+    }
+
+    const todoInput = $("#todoInput");
+    const todoList = $("#todoList");
+
+    todoInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const v = todoInput.value.trim();
+        if (!v) return;
+        state.todos.push({ id: makeId(), text: v, done: false });
+        todoInput.value = "";
+        save();
+        renderTodos();
+      }
+    });
+
+    function renderTodos() {
+      todoList.innerHTML = "";
+      const todoCount = $("#todoCount");
+      if (todoCount) {
+        const total = state.todos.length;
+        const done = state.todos.filter((t) => t.done).length;
+        todoCount.textContent = total ? `${done}/${total}` : "0";
+      }
+
+      if (state.todos.length === 0) {
+        const empty = document.createElement("div");
+        empty.style.color = "var(--muted)";
+        empty.style.fontSize = "12px";
+        empty.style.padding = "6px 8px";
+        empty.textContent = "No todos yet.";
+        todoList.appendChild(empty);
+        return;
+      }
+
+      state.todos.forEach((todo, idx) => {
+        const item = document.createElement("div");
+        item.className = "item";
+        if (todo.done) item.classList.add("done");
+
+        const handle = createHandle({
+          type: "todo",
+          fromList: "todo",
+          fromIndex: idx,
+          itemId: todo.id,
+          payload: todo.text,
+          draggingEl: item
+        });
+
+        const label = document.createElement("div");
+        label.className = "todo-text";
+        label.textContent = todo.text;
+        label.contentEditable = "true";
+        label.spellcheck = false;
+        label.addEventListener("dragover", (e) => e.preventDefault());
+        label.addEventListener("drop", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        });
+        label.addEventListener("input", () => {
+          todo.text = label.textContent;
+          save();
+        });
+        label.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            label.blur();
+          }
+        });
+
+        const delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.className = "todo-delete";
+        delBtn.setAttribute("aria-label", "Delete todo");
+        delBtn.textContent = "";
+        delBtn.addEventListener("click", () => {
+          state.todos.splice(idx, 1);
+          save();
+          renderTodos();
+        });
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "check";
+        checkbox.checked = !!todo.done;
+        checkbox.addEventListener("change", () => {
+          todo.done = checkbox.checked;
+          save();
+          renderTodos();
+        });
+
+        item.addEventListener("dragover", (e) => e.preventDefault());
+        item.addEventListener("drop", (e) => {
+          if (e.target.classList.contains("dropzone")) return;
+          e.preventDefault();
+          e.stopPropagation();
+        });
+
+        item.append(handle, label, delBtn, checkbox);
+        todoList.appendChild(item);
+      });
+    }
+
+    
+    function getScheduleArray(dk) {
+      ensureSchedule(dk);
+      return TIMES.map((t) => state.schedules[dk]?.[t] ?? null);
+    }
+
+    function setScheduleFromArray(dk, arr) {
+      ensureSchedule(dk);
+      TIMES.forEach((t, i) => {
+        const item = arr[i];
+        if (item && item.text && item.text.trim()) state.schedules[dk][t] = item;
+        else delete state.schedules[dk][t];
+      });
+    }
+
+function deleteSlot(dk, t) {
+      if (state.schedules?.[dk]) delete state.schedules[dk][t];
+    }
+
+    function insertIntoSchedule(dk, targetTime, item) {
+      ensureSchedule(dk);
+      const sched = state.schedules[dk];
+      if (!item || !item.text || !item.text.trim()) return false;
+
+      if (!sched[targetTime]) {
+        sched[targetTime] = item;
+        return true;
+      }
+
+      const startIdx = TIMES.indexOf(targetTime);
+      if (startIdx === -1) return false;
+
+      let emptyIdx = -1;
+      for (let i = startIdx; i < TIMES.length; i += 1) {
+        if (!sched[TIMES[i]]) {
+          emptyIdx = i;
+          break;
+        }
+      }
+
+      if (emptyIdx === -1) return false;
+
+      for (let i = emptyIdx; i > startIdx; i -= 1) {
+        const fromT = TIMES[i - 1];
+        const toT = TIMES[i];
+        sched[toT] = sched[fromT];
+      }
+      sched[targetTime] = item;
+      return true;
+    }
+
+    const rowsEl = $("#rows");
+    const nowLine = $("#nowLine");
+    const nowPill = $("#nowPill");
+
+    function renderSchedule() {
+      const dk = dateKey(selected);
+      ensureSchedule(dk);
+      updateScheduleSubtitle();
+      dateLabel.textContent = selected.toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      });
+
+      rowsEl.innerHTML = "";
+
+      TIMES.forEach((tkey, index) => {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.dataset.time = tkey;
+
+        const slotItem = getSlotItem(dk, tkey);
+        const slotText = slotItem?.text ?? "";
+
+        if (isPastTimeSlot(selected, tkey)) row.classList.add("past");
+        if (slotItem?.done) row.classList.add("done");
+
+        const time = document.createElement("div");
+        time.className = "time";
+        time.textContent = tkey;
+
+        const handle = createHandle({
+          type: "slot",
+          fromList: "schedule",
+          fromDateKey: dk,
+          fromTime: tkey,
+          itemId: slotItem?.id ?? null,
+          payload: slotText,
+          draggingEl: row,
+          canDrag: true
+        });
+
+        const input = document.createElement("input");
+        input.className = "editor";
+        input.placeholder = "Type task...";
+        input.value = slotText;
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "check";
+        checkbox.checked = !!slotItem?.done;
+        checkbox.addEventListener("change", () => {
+          setSlotDone(dk, tkey, checkbox.checked);
+          save();
+          renderSchedule();
+        });
+
+        row.addEventListener("mousedown", (e) => {
+          if (e.target === handle || e.target === checkbox) return;
+          input.focus();
+        });
+
+        input.addEventListener("input", () => {
+          setSlotText(dk, tkey, input.value);
+          if (!input.value.trim()) checkbox.checked = false;
+          save();
+          tickCountdown(true);
+        });
+
+        row.append(time, handle, input, checkbox);
+        rowsEl.appendChild(row);
+
+      });
+
+      updateNowLine();
+    }
+
+    function updateNowLine() {
+      if (!isSameDay(selected, new Date())) {
+        nowLine.style.display = "none";
+        nowPill.style.display = "none";
+        return;
+      }
+
+      const now = new Date();
+      const startMinutes = START_H * 60;
+      const endMinutes = END_H * 60;
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+      if (nowMinutes < startMinutes || nowMinutes >= endMinutes) {
+        nowLine.style.display = "none";
+        nowPill.style.display = "none";
+        return;
+      }
+
+      const rowEl = rowsEl.querySelector(".row");
+      const rowH = rowEl ? rowEl.getBoundingClientRect().height : 36;
+      const pxPerMin = rowH / SLOT_MIN;
+      const minsInto = nowMinutes - startMinutes;
+      const topPx = minsInto * pxPerMin;
+
+      nowLine.style.display = "block";
+      nowPill.style.display = "block";
+      nowLine.style.top = `${topPx}px`;
+      nowPill.style.top = `${topPx}px`;
+      nowPill.textContent = now.toTimeString().slice(0, 5);
+    }
+
+    const soundState = {
+      audioCtx: null,
+      lastWarnKey: null,
+      lastEndKey: null
+    };
+
+    const WARNING_SRC = "warning-sound.mp3";
+    const END_SRC = "alert-sound.mp3";
+
+    function playTone(freq, durationMs, force = false) {
+      if (!force && state.settings.sound.mute) return;
+      const volume = clamp((state.settings.sound.volume ?? 60) / 100, 0, 1);
+      if (volume === 0) return;
+      if (!soundState.audioCtx) {
+        soundState.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const ctx = soundState.audioCtx;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.value = volume * 0.2;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + durationMs / 1000);
+    }
+
+    function playChime(src, force = false) {
+      if (!force && state.settings.sound.mute) return;
+      const volume = clamp((state.settings.sound.volume ?? 60) / 100, 0, 1);
+      if (volume === 0) return;
+      const audio = new Audio(src);
+      audio.volume = volume;
+      audio.play().catch(() => {});
+    }
+
+    function playWarningSound(force = false) {
+      playChime(WARNING_SRC, force);
+    }
+
+    function playEndSound(force = false) {
+      playChime(END_SRC, force);
+    }
+
+    function shouldPlayForCurrentBlock(blockInfo) {
+      if (!blockInfo) return false;
+      if (!state.settings.sound.onlyIfTask) return true;
+      const dk = dateKey(selected);
+      const text = getSlotText(dk, blockInfo.timeKey);
+      return !!text;
+    }
+
+    function checkSoundAlerts() {
+      const blockInfo = getCurrentBlockInfo();
+      if (!blockInfo) return;
+      if (!isSameDay(selected, new Date())) return;
+      if (!shouldPlayForCurrentBlock(blockInfo)) return;
+
+      const dk = dateKey(selected);
+      const blockKey = `${dk}-${blockInfo.timeKey}`;
+
+      if (blockInfo.remainingMins === 5 && soundState.lastWarnKey !== blockKey) {
+        soundState.lastWarnKey = blockKey;
+        playWarningSound();
+      }
+
+      if (blockInfo.remainingMins === 0 && soundState.lastEndKey !== blockKey) {
+        soundState.lastEndKey = blockKey;
+        playEndSound();
+      }
+    }
+
+    const countdownEl = $("#countdown");
+
+    function tickCountdown(forceTitle = false) {
+      const blockInfo = getCurrentBlockInfo();
+      if (!blockInfo) {
+        countdownEl.textContent = "--:--";
+        if (forceTitle) document.title = "Daily Scheduler";
+        return;
+      }
+
+      const mins = Math.floor(blockInfo.remainingSecs / 60);
+      const secs = Math.max(0, blockInfo.remainingSecs % 60);
+      const formatted = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+      countdownEl.textContent = formatted;
+
+      const dk = dateKey(selected);
+      const task = getSlotText(dk, blockInfo.timeKey);
+      const titleTask = task ? ` ? ${task}` : "";
+      document.title = `? ${formatted}${titleTask}`;
+    }
+
+    function init() {
+      renderCalendar();
+      renderTodos();
+      renderSchedule();
+      tickCountdown(true);
+      updateNowLine();
+    }
+
+    init();
+
+    setInterval(() => {
+      tickCountdown();
+      updateNowLine();
+      checkSoundAlerts();
+    }, 1000);
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
