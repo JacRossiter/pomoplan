@@ -445,6 +445,11 @@
       position: relative;
     }
 
+    .item.parent-color {
+      background: color-mix(in srgb, var(--surface) 70%, var(--parentTint));
+      border-color: color-mix(in srgb, var(--border) 70%, var(--parentBorder));
+    }
+
     body.light .item {
       background: rgba(0, 0, 0, 0.03);
     }
@@ -460,6 +465,11 @@
       padding-left: 12px;
       position: relative;
       background: rgba(255, 255, 255, 0.02);
+    }
+
+    .item.child.parent-color {
+      background: color-mix(in srgb, var(--surface) 60%, var(--parentTint));
+      border-color: color-mix(in srgb, var(--border) 70%, var(--parentBorder));
     }
 
     .item.child .handle {
@@ -837,6 +847,15 @@
       transition: background 160ms var(--ease), border-color 160ms var(--ease), transform 220ms var(--ease-smooth), margin-top 220ms var(--ease-smooth);
     }
 
+    .row.parent-color .editor {
+      background: color-mix(in srgb, transparent 70%, var(--parentTint));
+      border-color: color-mix(in srgb, var(--border) 70%, var(--parentBorder));
+    }
+
+    .row.parent-color:hover .editor {
+      background: color-mix(in srgb, transparent 60%, var(--parentTint));
+    }
+
     .row:last-child {
       border-bottom: none;
     }
@@ -1051,6 +1070,14 @@
       font-size: 13px;
     }
 
+    .section-title {
+      margin: 6px 0 2px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: color-mix(in srgb, var(--muted) 75%, var(--text));
+    }
+
     .row2 {
       display: flex;
       align-items: center;
@@ -1077,6 +1104,15 @@
       color: var(--text);
       min-width: 74px;
       text-align: center;
+    }
+
+    .pill-edit {
+      cursor: text;
+    }
+
+    .pill-edit[contenteditable="true"] {
+      outline: 2px solid color-mix(in srgb, var(--primary) 45%, transparent);
+      background: rgba(255, 255, 255, 0.05);
     }
 
     .preview {
@@ -1384,31 +1420,33 @@
 
   <div id="accentPop" class="popover" role="dialog" aria-label="Theme settings">
     <div class="pop-title">Theme</div>
+    <div class="section-title">Mode</div>
     <div class="row2">
-      <div class="label">Mode</div>
+      <div class="label">Theme</div>
       <div class="segmented" role="group" aria-label="Theme mode">
         <button id="themeDark" class="seg-btn" type="button">Dark</button>
         <button id="themeLight" class="seg-btn" type="button">Light</button>
       </div>
     </div>
     <div class="divider"></div>
+    <div class="section-title">Accent</div>
     <div class="preview" id="accentPreview"></div>
 
     <div class="row2">
       <div class="label">Hue</div>
-      <div class="pill" id="hVal">0°</div>
+      <div class="pill pill-edit" id="hVal" data-range="hRange" data-min="0" data-max="360">0°</div>
     </div>
     <input id="hRange" class="range" type="range" min="0" max="360" value="330" />
 
     <div class="row2">
       <div class="label">Saturation</div>
-      <div class="pill" id="sVal">100%</div>
+      <div class="pill pill-edit" id="sVal" data-range="sRange" data-min="0" data-max="100">100%</div>
     </div>
     <input id="sRange" class="range" type="range" min="0" max="100" value="70" />
 
     <div class="row2">
       <div class="label">Lightness</div>
-      <div class="pill" id="lVal">50%</div>
+      <div class="pill pill-edit" id="lVal" data-range="lRange" data-min="0" data-max="100">50%</div>
     </div>
     <input id="lRange" class="range" type="range" min="0" max="100" value="60" />
 
@@ -1417,6 +1455,14 @@
       <div class="label">Hex</div>
       <div class="pill" id="hexVal">#ff5aa5</div>
     </div>
+
+    <div class="divider"></div>
+    <div class="section-title">Task tint</div>
+    <div class="row2">
+      <div class="label">Saturation</div>
+      <div class="pill pill-edit" id="tintVal" data-range="tintRange" data-min="0" data-max="60">30%</div>
+    </div>
+    <input id="tintRange" class="range" type="range" min="0" max="60" value="30" />
   </div>
 
   <div id="soundPop" class="popover" role="dialog" aria-label="Sound settings">
@@ -1711,6 +1757,7 @@
         theme: "dark",
         accent: "#ff5aa5",
         accentHSL: { h: 330, s: 70, l: 60 },
+        taskTintSat: 30,
         slotMinutes: 30,
         dayStart: 7,
         dayEnd: 22,
@@ -1726,6 +1773,51 @@
 
     function makeId() {
       return `id_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+    }
+
+    let parentHueMap = new Map();
+    let parentHueSignature = "";
+
+    function collectParentIds() {
+      const ids = new Set();
+      state.todos.forEach((todo) => {
+        if (isParentTodo(todo)) ids.add(todo.id);
+        if (todo.parentId) ids.add(todo.parentId);
+      });
+      Object.values(state.schedules || {}).forEach((day) => {
+        if (!day || typeof day !== "object") return;
+        Object.values(day).forEach((item) => {
+          if (item?.parentId) ids.add(item.parentId);
+        });
+      });
+      return [...ids];
+    }
+
+    function ensureParentHueMap() {
+      const ids = collectParentIds().sort();
+      const signature = ids.join("|");
+      if (signature === parentHueSignature) return;
+      parentHueSignature = signature;
+      parentHueMap = new Map();
+      if (!ids.length) return;
+      const step = 360 / ids.length;
+      ids.forEach((id, idx) => {
+        const hue = Math.round((idx * step) % 360);
+        parentHueMap.set(id, hue);
+      });
+    }
+
+    function getParentColors(parentId) {
+      if (!parentId) return null;
+      ensureParentHueMap();
+      const hue = parentHueMap.get(parentId);
+      if (hue == null) return null;
+      const sat = clamp(state.settings.taskTintSat ?? 30, 0, 100);
+      const borderSat = clamp(sat + 2, 0, 100);
+      return {
+        tint: `hsl(${hue} ${sat}% 28%)`,
+        border: `hsl(${hue} ${borderSat}% 40%)`
+      };
     }
 
     function normalizeTodo(entry) {
@@ -1768,6 +1860,7 @@
       state.settings.slotMinutes = state.settings.slotMinutes ?? baseSettings.slotMinutes;
       state.settings.dayStart = state.settings.dayStart ?? baseSettings.dayStart;
       state.settings.dayEnd = state.settings.dayEnd ?? baseSettings.dayEnd;
+      state.settings.taskTintSat = state.settings.taskTintSat ?? baseSettings.taskTintSat;
       state.todos = Array.isArray(state.todos) ? state.todos.map(normalizeTodo).filter(Boolean) : [];
       if (!state.schedules || typeof state.schedules !== "object") state.schedules = {};
       Object.keys(state.schedules).forEach((dk) => {
@@ -1873,7 +1966,18 @@
 
     function isParentTodo(todo) {
       if (!todo) return false;
-      return state.todos.some((t) => t.parentId === todo.id);
+      const hasTodoChildren = state.todos.some((t) => t.parentId === todo.id);
+      if (hasTodoChildren) return true;
+      return hasScheduleChildren(todo.id);
+    }
+
+    function hasScheduleChildren(parentId) {
+      if (!parentId) return false;
+      const schedules = state.schedules || {};
+      return Object.values(schedules).some((day) => {
+        if (!day || typeof day !== "object") return false;
+        return Object.values(day).some((item) => item && item.parentId === parentId);
+      });
     }
 
     function getTodoGroupIds(rootId) {
@@ -1918,6 +2022,21 @@
     function clearAllDim() {
       rowsEl.querySelectorAll(".row").forEach((r) => r.classList.remove("dim"));
       todoList.querySelectorAll(".item").forEach((i) => i.classList.remove("dim"));
+    }
+
+    function applyTodoDim(todo) {
+      if (!todo) return;
+      const targetParentId = todo.parentId || todo.id;
+      rowsEl.querySelectorAll(".row").forEach((r) => r.classList.add("dim"));
+      todoList.querySelectorAll(".item").forEach((i) => i.classList.add("dim"));
+      const parentItem = todoList.querySelector(`.item[data-todo-id="${targetParentId}"]`);
+      if (parentItem) parentItem.classList.remove("dim");
+      todoList
+        .querySelectorAll(`.item[data-parent-id="${targetParentId}"]`)
+        .forEach((i) => i.classList.remove("dim"));
+      rowsEl
+        .querySelectorAll(`.row[data-parent-id="${targetParentId}"]`)
+        .forEach((r) => r.classList.remove("dim"));
     }
 
     function getHoverTodoIdFromPoint(x, y) {
@@ -1985,9 +2104,11 @@
     const hRange = $("#hRange");
     const sRange = $("#sRange");
     const lRange = $("#lRange");
+    const tintRange = $("#tintRange");
     const hVal = $("#hVal");
     const sVal = $("#sVal");
     const lVal = $("#lVal");
+    const tintVal = $("#tintVal");
     const hexVal = $("#hexVal");
     const accentPreview = $("#accentPreview");
 
@@ -2001,6 +2122,13 @@
       lVal.textContent = `${l}%`;
       hexVal.textContent = state.settings.accent.toLowerCase();
       accentPreview.style.background = state.settings.accent;
+    }
+
+    function syncTintUI() {
+      if (!tintRange || !tintVal) return;
+      const val = clamp(state.settings.taskTintSat ?? 30, 0, 100);
+      tintRange.value = val;
+      tintVal.textContent = `${val}%`;
     }
 
     function syncThemeUI() {
@@ -2022,8 +2150,95 @@
       syncAccentUI();
     }
 
+    function clampNumber(value, min, max) {
+      if (Number.isNaN(value)) return null;
+      return clamp(value, min, max);
+    }
+
+    function bindEditablePill(pillEl, onCommit) {
+      if (!pillEl) return;
+      const rangeId = pillEl.dataset.range;
+      const min = Number(pillEl.dataset.min ?? 0);
+      const max = Number(pillEl.dataset.max ?? 100);
+      const rangeEl = rangeId ? $(`#${rangeId}`) : null;
+
+      const finishEdit = (commit) => {
+        pillEl.removeAttribute("contenteditable");
+        pillEl.blur();
+        const raw = pillEl.textContent ?? "";
+        const numeric = Number(raw.replace(/[^\d.-]/g, ""));
+        const clamped = clampNumber(numeric, min, max);
+        if (commit && clamped != null && rangeEl) {
+          rangeEl.value = String(clamped);
+          onCommit(clamped);
+        } else {
+          onCommit(null, true);
+        }
+      };
+
+      pillEl.addEventListener("click", () => {
+        pillEl.setAttribute("contenteditable", "true");
+        const text = pillEl.textContent ?? "";
+        pillEl.textContent = text.replace(/[^\d.-]/g, "");
+        requestAnimationFrame(() => {
+          pillEl.focus();
+          document.getSelection()?.selectAllChildren(pillEl);
+        });
+      });
+
+      pillEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          finishEdit(true);
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          finishEdit(false);
+        }
+      });
+
+      pillEl.addEventListener("blur", () => finishEdit(true));
+    }
+
     [hRange, sRange, lRange].forEach((inp) => {
       inp.addEventListener("input", commitAccentFromSliders);
+    });
+
+    if (tintRange) {
+      tintRange.addEventListener("input", () => {
+        state.settings.taskTintSat = Number(tintRange.value);
+        save();
+        syncTintUI();
+        renderTodos();
+        renderSchedule();
+      });
+    }
+
+    bindEditablePill(hVal, (value, restoreOnly) => {
+      if (restoreOnly || value == null) return syncAccentUI();
+      hRange.value = String(value);
+      commitAccentFromSliders();
+    });
+
+    bindEditablePill(sVal, (value, restoreOnly) => {
+      if (restoreOnly || value == null) return syncAccentUI();
+      sRange.value = String(value);
+      commitAccentFromSliders();
+    });
+
+    bindEditablePill(lVal, (value, restoreOnly) => {
+      if (restoreOnly || value == null) return syncAccentUI();
+      lRange.value = String(value);
+      commitAccentFromSliders();
+    });
+
+    bindEditablePill(tintVal, (value, restoreOnly) => {
+      if (restoreOnly || value == null) return syncTintUI();
+      tintRange.value = String(value);
+      state.settings.taskTintSat = Number(tintRange.value);
+      save();
+      syncTintUI();
+      renderTodos();
+      renderSchedule();
     });
 
     $("#themeBtn").addEventListener("click", () => {
@@ -2032,6 +2247,7 @@
         state.settings.accentHSL = rgb ? rgbToHsl(rgb.r, rgb.g, rgb.b) : { h: 330, s: 70, l: 60 };
       }
       syncAccentUI();
+      syncTintUI();
       syncThemeUI();
       openPopover(accentPop, $("#themeBtn"));
     });
@@ -2753,6 +2969,12 @@
         if (todo.parentId) item.dataset.parentId = todo.parentId;
         const isParent = isParentTodo(todo);
         if (todo.done) item.classList.add("done");
+        const parentColors = todo.parentId ? getParentColors(todo.parentId) : (isParent ? getParentColors(todo.id) : null);
+        if (parentColors) {
+          item.classList.add("parent-color");
+          item.style.setProperty("--parentTint", parentColors.tint);
+          item.style.setProperty("--parentBorder", parentColors.border);
+        }
 
         const handle = createHandle({
           type: "todo",
@@ -2830,6 +3052,12 @@
           todo.done = !todo.done;
           save();
           renderTodos();
+        });
+
+        item.addEventListener("mouseenter", () => applyTodoDim(todo));
+        item.addEventListener("mouseleave", (e) => {
+          if (item.contains(e.relatedTarget)) return;
+          clearAllDim();
         });
 
         item.addEventListener("dragover", (e) => e.preventDefault());
@@ -2926,6 +3154,12 @@ function deleteSlot(dk, t) {
 
         const slotItem = getSlotItem(dk, tkey);
         const slotText = slotItem?.text ?? "";
+        const parentColors = slotItem?.parentId ? getParentColors(slotItem.parentId) : null;
+        if (parentColors) {
+          row.classList.add("parent-color");
+          row.style.setProperty("--parentTint", parentColors.tint);
+          row.style.setProperty("--parentBorder", parentColors.border);
+        }
 
         if (isPastTimeSlot(selected, tkey)) row.classList.add("past");
         if (slotItem?.done) row.classList.add("done");
