@@ -14,7 +14,7 @@
       --border-soft: #2d2d2d;
       --surface: rgba(255, 255, 255, 0.03);
       --surface-strong: rgba(255, 255, 255, 0.06);
-      --primary: #ff5aa5;
+      --primary: #27215e;
 
       --rowH: 36px;
       --dzH: 3px;
@@ -574,6 +574,11 @@
       background-repeat: no-repeat;
       background-position: center;
       background-size: 16px 16px;
+    }
+
+    .todo-split.is-hidden {
+      visibility: hidden;
+      pointer-events: none;
     }
 
     .item:hover .todo-delete,
@@ -1435,26 +1440,26 @@
 
     <div class="row2">
       <div class="label">Hue</div>
-      <div class="pill pill-edit" id="hVal" data-range="hRange" data-min="0" data-max="360">0°</div>
+      <div class="pill pill-edit" id="hVal" data-range="hRange" data-min="0" data-max="360">246°</div>
     </div>
-    <input id="hRange" class="range" type="range" min="0" max="360" value="330" />
+    <input id="hRange" class="range" type="range" min="0" max="360" value="246" />
 
     <div class="row2">
       <div class="label">Saturation</div>
-      <div class="pill pill-edit" id="sVal" data-range="sRange" data-min="0" data-max="100">100%</div>
+      <div class="pill pill-edit" id="sVal" data-range="sRange" data-min="0" data-max="100">48%</div>
     </div>
-    <input id="sRange" class="range" type="range" min="0" max="100" value="70" />
+    <input id="sRange" class="range" type="range" min="0" max="100" value="48" />
 
     <div class="row2">
       <div class="label">Lightness</div>
-      <div class="pill pill-edit" id="lVal" data-range="lRange" data-min="0" data-max="100">50%</div>
+      <div class="pill pill-edit" id="lVal" data-range="lRange" data-min="0" data-max="100">25%</div>
     </div>
-    <input id="lRange" class="range" type="range" min="0" max="100" value="60" />
+    <input id="lRange" class="range" type="range" min="0" max="100" value="25" />
 
     <div class="divider"></div>
     <div class="row2">
       <div class="label">Hex</div>
-      <div class="pill" id="hexVal">#ff5aa5</div>
+      <div class="pill" id="hexVal">#27215e</div>
     </div>
 
     <div class="divider"></div>
@@ -1473,9 +1478,9 @@
     </label>
     <div class="row2" style="margin-top:10px;">
       <div class="label">Dim strength</div>
-      <div class="pill pill-edit" id="dimVal" data-range="dimRange" data-min="0" data-max="100">25%</div>
+      <div class="pill pill-edit" id="dimVal" data-range="dimRange" data-min="0" data-max="100">50%</div>
     </div>
-    <input id="dimRange" class="range" type="range" min="0" max="100" value="25" />
+    <input id="dimRange" class="range" type="range" min="0" max="100" value="50" />
   </div>
 
   <div id="soundPop" class="popover" role="dialog" aria-label="Sound settings">
@@ -1768,10 +1773,10 @@
     const defaultState = {
       settings: {
         theme: "dark",
-        accent: "#ff5aa5",
-        accentHSL: { h: 330, s: 70, l: 60 },
+        accent: "#27215e",
+        accentHSL: { h: 246, s: 48, l: 25 },
         taskTintSat: 30,
-        dimOpacity: 25,
+        dimOpacity: 50,
         dimScheduleOnlyWhenChild: true,
         slotMinutes: 30,
         dayStart: 7,
@@ -3097,6 +3102,7 @@
         const splitBtn = document.createElement("button");
         splitBtn.type = "button";
         splitBtn.className = "todo-split";
+        if (todo.parentId) splitBtn.classList.add("is-hidden");
         splitBtn.setAttribute("aria-label", "Add subtask");
         splitBtn.addEventListener("click", () => {
           const child = {
