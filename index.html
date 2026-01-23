@@ -101,28 +101,47 @@
 
     .hdr-actions {
       display: flex;
-      gap: 10px;
+      gap: 6px;
       align-items: center;
+      padding: 4px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.2);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
     }
 
     .btn {
       border: none;
-      border-radius: 10px;
-      padding: 8px 10px;
+      border-radius: 999px;
+      width: 32px;
+      height: 32px;
+      padding: 0;
       cursor: pointer;
       font-weight: 900;
       line-height: 1;
       background: rgba(255, 255, 255, 0.18);
       color: #fff;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 8px;
       transition: transform 160ms var(--ease), background 160ms var(--ease), box-shadow 160ms var(--ease);
     }
 
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
     .btn:hover {
       transform: translateY(-1px);
       background: rgba(255, 255, 255, 0.22);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid color-mix(in srgb, var(--primary) 60%, transparent);
+      outline-offset: 2px;
     }
 
     .btn:active {
@@ -131,10 +150,8 @@
     }
 
     .accent-btn {
-      width: 38px;
-      height: 34px;
-      justify-content: center;
-      padding: 0;
+      width: 32px;
+      height: 32px;
       position: relative;
     }
 
@@ -145,6 +162,18 @@
       background: var(--primary);
       border: 2px solid rgba(255, 255, 255, 0.75);
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    .icon {
+      font-size: 14px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      transform: translateY(-0.5px);
+      font-variation-settings: "wght" 700;
     }
 
     .wrap {
@@ -293,6 +322,30 @@
       text-align: center;
     }
 
+    .todo-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .todo-undo {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+    }
+
+    .todo-undo.show {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .todo-input-wrap {
       display: flex;
       align-items: center;
@@ -418,14 +471,16 @@
       background-size: 12px 12px;
     }
 
-    .item:hover .todo-delete {
+    .item:hover .todo-delete,
+    .todo-delete:hover,
+    .todo-delete:focus-visible {
       opacity: 1;
     }
 
     .todo-delete:hover {
       color: var(--text);
       border-color: color-mix(in srgb, var(--border) 60%, white 40%);
-      background: rgba(255, 255, 255, 0.06);
+      background-color: rgba(255, 255, 255, 0.06);
     }
 
     .check {
@@ -859,6 +914,97 @@
       transform: translateY(1px);
     }
 
+    .help-pop {
+      width: 380px;
+      max-width: calc(100vw - 24px);
+    }
+
+    .help-kicker {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin: 0 0 6px;
+      font-weight: 800;
+    }
+
+    .help-text {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      margin: 0 0 12px;
+    }
+
+    .help-section {
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+
+    .help-grid {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .help-item {
+      display: grid;
+      gap: 2px;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .help-item span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .welcome-pop {
+      width: 360px;
+      max-width: calc(100vw - 24px);
+    }
+
+    .welcome-pop .pop-title {
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+
+    .welcome-text {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin: 0 0 10px;
+    }
+
+    .welcome-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+
+    .mini-btn {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .mini-btn:hover {
+      border-color: color-mix(in srgb, var(--border) 70%, white 30%);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .mini-btn.primary {
+      background: var(--primary);
+      border-color: transparent;
+      color: #fff;
+    }
+
     .divider {
       height: 1px;
       background: var(--border);
@@ -909,13 +1055,18 @@
       <div id="countdown" class="countdown">--:--</div>
     </div>
     <div class="hdr-actions">
-      <button id="accentBtn" class="btn accent-btn" title="Accent color">
-        <span class="accent-dot" aria-hidden="true"></span>
+      <button id="themeBtn" class="btn" title="Theme" aria-label="Theme">
+        <span class="icon">🎨</span>
       </button>
-      <button id="soundBtn" class="btn" title="Sound settings">🔊</button>
-      <button id="settingsBtn" class="btn" title="Schedule settings">⚙️</button>
-      <button id="helpBtn" class="btn" title="Help">?</button>
-      <button id="darkBtn" class="btn" title="Toggle theme">☀️</button>
+      <button id="soundBtn" class="btn" title="Sound settings" aria-label="Sound settings">
+        <span class="icon">🔊</span>
+      </button>
+      <button id="settingsBtn" class="btn" title="Schedule settings" aria-label="Schedule settings">
+        <span class="icon">⚙️</span>
+      </button>
+      <button id="helpBtn" class="btn" title="Help" aria-label="Help">
+        <span class="icon">❓</span>
+      </button>
     </div>
   </header>
 
@@ -939,7 +1090,10 @@
       <div class="card todo-card">
         <div class="todo-header">
           <h3 class="todo-title">To Do</h3>
-          <div id="todoCount" class="todo-count">0</div>
+          <div class="todo-meta">
+            <button id="undoBtn" class="todo-undo" type="button">Undo</button>
+            <div id="todoCount" class="todo-count">0</div>
+          </div>
         </div>
         <div class="todo-input-wrap">
           <input id="todoInput" class="todo-input" placeholder="Add a task..." />
@@ -968,8 +1122,16 @@
 
   <div id="backdrop" class="backdrop"></div>
 
-  <div id="accentPop" class="popover" role="dialog" aria-label="Accent color picker">
-    <div class="pop-title">Accent color (HSL)</div>
+  <div id="accentPop" class="popover" role="dialog" aria-label="Theme settings">
+    <div class="pop-title">Theme</div>
+    <div class="row2">
+      <div class="label">Mode</div>
+      <div class="segmented" role="group" aria-label="Theme mode">
+        <button id="themeDark" class="seg-btn" type="button">Dark</button>
+        <button id="themeLight" class="seg-btn" type="button">Light</button>
+      </div>
+    </div>
+    <div class="divider"></div>
     <div class="preview" id="accentPreview"></div>
 
     <div class="row2">
@@ -1050,15 +1212,68 @@
       <button id="slot60" class="seg-btn" type="button">60 min</button>
     </div>
   </div>
-  <div id="helpPop" class="popover" role="dialog" aria-label="Help">
+  <div id="helpPop" class="popover help-pop" role="dialog" aria-label="Help">
     <div class="pop-title">Quick help</div>
+    <div class="help-kicker">What this is</div>
+    <p class="help-text">
+      Daily Scheduler is for time-blocking your day. Add tasks, drag priorities into the schedule,
+      and focus on one block at a time with optional sound alerts. If you use Pomodoro,
+      treat each block as a focused sprint (often 25 minutes work + a short break).
+    </p>
+
+    <div class="help-section">
+      <div class="help-kicker">Core actions</div>
+      <div class="help-grid">
+        <div class="help-item">
+          Type a task in any time slot.
+          <span>Press Enter to save.</span>
+        </div>
+        <div class="help-item">
+          Drag by the handle to reorder or move items.
+          <span>Between To Do and Schedule.</span>
+        </div>
+        <div class="help-item">
+          Check off completed items.
+          <span>Hover to reveal checkboxes and delete.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-kicker">Customize</div>
+      <div class="help-grid">
+        <div class="help-item">
+          Schedule range and block size.
+          <span>30 or 60 minute blocks.</span>
+        </div>
+        <div class="help-item">
+          Sound alerts and previews.
+          <span>5‑minute warning + end of block.</span>
+        </div>
+        <div class="help-item">
+          Theme + accent color.
+          <span>Use the buttons in the top-right.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="welcomePop" class="popover welcome-pop" role="dialog" aria-label="Welcome">
+    <div class="pop-title">Welcome to Daily Scheduler</div>
+    <p class="welcome-text">
+      This app is built for time-blocking your day. Add tasks, drag your priorities into
+      the schedule, and focus on one block at a time. Check items off as you go and use
+      sound alerts to stay on track.
+    </p>
     <ul class="help-list">
-      <li>Click any time slot to type a task. Enter saves.</li>
-      <li>Drag the handle to reorder or move between To Do and Schedule.</li>
-      <li>Hover to reveal checkboxes and delete buttons.</li>
-      <li>Sound settings control alerts and previews.</li>
-      <li>Schedule settings change day range and block size.</li>
+      <li>Plan your day in 30 or 60 minute blocks.</li>
+      <li>Move tasks between To Do and the schedule by dragging.</li>
+      <li>Use the top-right buttons for settings, sound, and quick help.</li>
     </ul>
+    <div class="welcome-actions">
+      <button id="welcomeHelpBtn" class="mini-btn" type="button">Show help</button>
+      <button id="welcomeCloseBtn" class="mini-btn primary" type="button">Get started</button>
+    </div>
   </div>
   <script>
     const $ = (sel, root = document) => root.querySelector(sel);
@@ -1228,6 +1443,7 @@
     }
 
     const STORE_KEY = "dailyScheduler_v5";
+    const WELCOME_KEY = "dailyScheduler_seenWelcome_v1";
     const defaultState = {
       settings: {
         theme: "dark",
@@ -1351,33 +1567,36 @@
     function applyTheme() {
       document.body.classList.toggle("light", state.settings.theme === "light");
       document.documentElement.style.setProperty("--primary", state.settings.accent);
-      $("#darkBtn").textContent = state.settings.theme === "light" ? "🌙" : "☀️";
+      // theme button uses the accent dot; no per-mode icon swap
     }
 
     applyTheme();
 
-    $("#darkBtn").addEventListener("click", () => {
-      state.settings.theme = state.settings.theme === "light" ? "dark" : "light";
-      save();
-      applyTheme();
-    });
 
     const backdrop = $("#backdrop");
     const accentPop = $("#accentPop");
     const soundPop = $("#soundPop");
     const helpPop = $("#helpPop");
     const settingsPop = $("#settingsPop");
+    const welcomePop = $("#welcomePop");
+    const undoBtn = $("#undoBtn");
     const slot30Btn = $("#slot30");
     const slot60Btn = $("#slot60");
     const startTimeSel = $("#startTime");
     const endTimeSel = $("#endTime");
+    const themeDarkBtn = $("#themeDark");
+    const themeLightBtn = $("#themeLight");
+    const welcomeCloseBtn = $("#welcomeCloseBtn");
+    const welcomeHelpBtn = $("#welcomeHelpBtn");
     let openPop = null;
+    const deletedStack = [];
 
     function openPopover(pop, anchorEl) {
       closePopover();
       openPop = pop;
       backdrop.style.display = "block";
       pop.style.display = "block";
+      pop.style.transform = "none";
 
       const r = anchorEl.getBoundingClientRect();
       const popRect = pop.getBoundingClientRect();
@@ -1390,12 +1609,32 @@
       pop.style.top = `${top}px`;
     }
 
+    function openCenteredPopover(pop) {
+      closePopover();
+      openPop = pop;
+      backdrop.style.display = "block";
+      pop.style.display = "block";
+      pop.style.left = "50%";
+      pop.style.top = "50%";
+      pop.style.transform = "translate(-50%, -50%)";
+    }
+
+    function markWelcomeSeen() {
+      localStorage.setItem(WELCOME_KEY, "1");
+    }
+
+    function shouldShowWelcome() {
+      return !localStorage.getItem(WELCOME_KEY);
+    }
+
     function closePopover() {
+      if (openPop === welcomePop) markWelcomeSeen();
       backdrop.style.display = "none";
       accentPop.style.display = "none";
       soundPop.style.display = "none";
       helpPop.style.display = "none";
       settingsPop.style.display = "none";
+      welcomePop.style.display = "none";
       openPop = null;
     }
 
@@ -1425,6 +1664,13 @@
       accentPreview.style.background = state.settings.accent;
     }
 
+    function syncThemeUI() {
+      if (!themeDarkBtn || !themeLightBtn) return;
+      const isLight = state.settings.theme === "light";
+      themeDarkBtn.classList.toggle("active", !isLight);
+      themeLightBtn.classList.toggle("active", isLight);
+    }
+
     function commitAccentFromSliders() {
       const h = Number(hRange.value);
       const s = Number(sRange.value);
@@ -1441,14 +1687,33 @@
       inp.addEventListener("input", commitAccentFromSliders);
     });
 
-    $("#accentBtn").addEventListener("click", () => {
+    $("#themeBtn").addEventListener("click", () => {
       if (!state.settings.accentHSL) {
         const rgb = hexToRgb(state.settings.accent || "#ff5aa5");
         state.settings.accentHSL = rgb ? rgbToHsl(rgb.r, rgb.g, rgb.b) : { h: 330, s: 70, l: 60 };
       }
       syncAccentUI();
-      openPopover(accentPop, $("#accentBtn"));
+      syncThemeUI();
+      openPopover(accentPop, $("#themeBtn"));
     });
+
+    if (themeDarkBtn) {
+      themeDarkBtn.addEventListener("click", () => {
+        state.settings.theme = "dark";
+        save();
+        applyTheme();
+        syncThemeUI();
+      });
+    }
+
+    if (themeLightBtn) {
+      themeLightBtn.addEventListener("click", () => {
+        state.settings.theme = "light";
+        save();
+        applyTheme();
+        syncThemeUI();
+      });
+    }
 
     const muteChk = $("#muteChk");
     const volRange = $("#volRange");
@@ -1460,6 +1725,12 @@
       volRange.value = state.settings.sound.volume ?? 60;
       volVal.textContent = `${volRange.value}%`;
       onlyIfTaskChk.checked = !!state.settings.sound.onlyIfTask;
+    }
+
+    function updateUndoButton() {
+      if (!undoBtn) return;
+      undoBtn.disabled = deletedStack.length === 0;
+      undoBtn.classList.toggle("show", deletedStack.length > 0);
     }
 
     function syncScheduleUI() {
@@ -1544,6 +1815,33 @@
     $("#helpBtn").addEventListener("click", () => {
       openPopover(helpPop, $("#helpBtn"));
     });
+    if (welcomeCloseBtn) {
+      welcomeCloseBtn.addEventListener("click", () => {
+        markWelcomeSeen();
+        closePopover();
+      });
+    }
+    if (welcomeHelpBtn) {
+      welcomeHelpBtn.addEventListener("click", () => {
+        markWelcomeSeen();
+        closePopover();
+        openPopover(helpPop, $("#helpBtn"));
+      });
+    }
+    if (undoBtn) {
+      updateUndoButton();
+      undoBtn.addEventListener("click", () => {
+        if (deletedStack.length === 0) return;
+        const lastDeleted = deletedStack.pop();
+        if (lastDeleted?.type === "todo") {
+          const insertIdx = Math.min(lastDeleted.index, state.todos.length);
+          state.todos.splice(insertIdx, 0, lastDeleted.item);
+          save();
+          renderTodos();
+        }
+        updateUndoButton();
+      });
+    }
 
     if (slot30Btn) slot30Btn.addEventListener("click", () => setSlotMinutes(30));
     if (slot60Btn) slot60Btn.addEventListener("click", () => setSlotMinutes(60));
@@ -2002,6 +2300,7 @@
         empty.style.padding = "6px 8px";
         empty.textContent = "No todos yet.";
         todoList.appendChild(empty);
+        updateUndoButton();
         return;
       }
 
@@ -2046,7 +2345,11 @@
         delBtn.setAttribute("aria-label", "Delete todo");
         delBtn.textContent = "";
         delBtn.addEventListener("click", () => {
-          state.todos.splice(idx, 1);
+          const [removed] = state.todos.splice(idx, 1);
+          if (removed) {
+            deletedStack.push({ type: "todo", item: removed, index: idx });
+            updateUndoButton();
+          }
           save();
           renderTodos();
         });
@@ -2071,6 +2374,7 @@
         item.append(handle, label, delBtn, checkbox);
         todoList.appendChild(item);
       });
+      updateUndoButton();
     }
 
     
@@ -2323,8 +2627,8 @@ function deleteSlot(dk, t) {
 
       const dk = dateKey(selected);
       const task = getSlotText(dk, blockInfo.timeKey);
-      const titleTask = task ? ` ? ${task}` : "";
-      document.title = `? ${formatted}${titleTask}`;
+      const titleTask = task ? ` - ${task}` : "";
+      document.title = `⏳ ${formatted}${titleTask}`;
     }
 
     function init() {
@@ -2333,6 +2637,9 @@ function deleteSlot(dk, t) {
       renderSchedule();
       tickCountdown(true);
       updateNowLine();
+      if (welcomePop && shouldShowWelcome()) {
+        setTimeout(() => openCenteredPopover(welcomePop), 250);
+      }
     }
 
     init();
@@ -2345,6 +2652,12 @@ function deleteSlot(dk, t) {
   </script>
 </body>
 </html>
+
+
+
+
+
+
 
 
 
