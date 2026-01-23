@@ -31,6 +31,7 @@
       --lift: none;
       --itemPad: 6px 10px;
       --rowPad: 0 12px;
+      --dimOpacity: 0.25;
     }
 
     body.light {
@@ -967,11 +968,11 @@
     }
 
     .row.dim {
-      opacity: 0.25;
+      opacity: var(--dimOpacity);
     }
 
     .item.dim {
-      opacity: 0.25;
+      opacity: var(--dimOpacity);
     }
 
     .nowline {
@@ -1463,6 +1464,18 @@
       <div class="pill pill-edit" id="tintVal" data-range="tintRange" data-min="0" data-max="60">30%</div>
     </div>
     <input id="tintRange" class="range" type="range" min="0" max="60" value="30" />
+
+    <div class="divider"></div>
+    <div class="section-title">Focus dimming</div>
+    <label class="toggle">
+      <input id="dimScheduleChk" type="checkbox" />
+      Only dim schedule when child is scheduled
+    </label>
+    <div class="row2" style="margin-top:10px;">
+      <div class="label">Dim strength</div>
+      <div class="pill pill-edit" id="dimVal" data-range="dimRange" data-min="0" data-max="100">25%</div>
+    </div>
+    <input id="dimRange" class="range" type="range" min="0" max="100" value="25" />
   </div>
 
   <div id="soundPop" class="popover" role="dialog" aria-label="Sound settings">
@@ -1758,6 +1771,8 @@
         accent: "#ff5aa5",
         accentHSL: { h: 330, s: 70, l: 60 },
         taskTintSat: 30,
+        dimOpacity: 25,
+        dimScheduleOnlyWhenChild: true,
         slotMinutes: 30,
         dayStart: 7,
         dayEnd: 22,
@@ -1861,6 +1876,8 @@
       state.settings.dayStart = state.settings.dayStart ?? baseSettings.dayStart;
       state.settings.dayEnd = state.settings.dayEnd ?? baseSettings.dayEnd;
       state.settings.taskTintSat = state.settings.taskTintSat ?? baseSettings.taskTintSat;
+      state.settings.dimOpacity = state.settings.dimOpacity ?? baseSettings.dimOpacity;
+      state.settings.dimScheduleOnlyWhenChild = state.settings.dimScheduleOnlyWhenChild ?? baseSettings.dimScheduleOnlyWhenChild;
       state.todos = Array.isArray(state.todos) ? state.todos.map(normalizeTodo).filter(Boolean) : [];
       if (!state.schedules || typeof state.schedules !== "object") state.schedules = {};
       Object.keys(state.schedules).forEach((dk) => {
@@ -1934,6 +1951,9 @@
     function applyTheme() {
       document.body.classList.toggle("light", state.settings.theme === "light");
       document.documentElement.style.setProperty("--primary", state.settings.accent);
+      const dimStrength = clamp(state.settings.dimOpacity ?? 25, 0, 100);
+      const dimOpacity = 1 - dimStrength / 100;
+      document.documentElement.style.setProperty("--dimOpacity", String(dimOpacity));
       // theme button uses the accent dot; no per-mode icon swap
     }
 
@@ -2024,10 +2044,34 @@
       todoList.querySelectorAll(".item").forEach((i) => i.classList.remove("dim"));
     }
 
+    let dimClearTimer = null;
+
+    function scheduleDimClear(delay = 80) {
+      if (dimClearTimer) clearTimeout(dimClearTimer);
+      dimClearTimer = setTimeout(() => {
+        clearAllDim();
+        dimClearTimer = null;
+      }, delay);
+    }
+
+    function cancelDimClear() {
+      if (dimClearTimer) {
+        clearTimeout(dimClearTimer);
+        dimClearTimer = null;
+      }
+    }
+
     function applyTodoDim(todo) {
       if (!todo) return;
+      cancelDimClear();
       const targetParentId = todo.parentId || todo.id;
-      rowsEl.querySelectorAll(".row").forEach((r) => r.classList.add("dim"));
+      const hasSched = hasScheduleChildren(targetParentId);
+      const shouldDimSchedule = !state.settings.dimScheduleOnlyWhenChild || hasSched;
+      if (shouldDimSchedule) {
+        rowsEl.querySelectorAll(".row").forEach((r) => r.classList.add("dim"));
+      } else {
+        rowsEl.querySelectorAll(".row").forEach((r) => r.classList.remove("dim"));
+      }
       todoList.querySelectorAll(".item").forEach((i) => i.classList.add("dim"));
       const parentItem = todoList.querySelector(`.item[data-todo-id="${targetParentId}"]`);
       if (parentItem) parentItem.classList.remove("dim");
@@ -2105,10 +2149,12 @@
     const sRange = $("#sRange");
     const lRange = $("#lRange");
     const tintRange = $("#tintRange");
+    const dimRange = $("#dimRange");
     const hVal = $("#hVal");
     const sVal = $("#sVal");
     const lVal = $("#lVal");
     const tintVal = $("#tintVal");
+    const dimVal = $("#dimVal");
     const hexVal = $("#hexVal");
     const accentPreview = $("#accentPreview");
 
@@ -2129,6 +2175,18 @@
       const val = clamp(state.settings.taskTintSat ?? 30, 0, 100);
       tintRange.value = val;
       tintVal.textContent = `${val}%`;
+    }
+
+    function syncDimUI() {
+      if (dimRange && dimVal) {
+        const val = clamp(state.settings.dimOpacity ?? 25, 0, 100);
+        dimRange.value = val;
+        dimVal.textContent = `${val}%`;
+      }
+      const dimScheduleChk = $("#dimScheduleChk");
+      if (dimScheduleChk) {
+        dimScheduleChk.checked = !!state.settings.dimScheduleOnlyWhenChild;
+      }
     }
 
     function syncThemeUI() {
@@ -2213,6 +2271,25 @@
       });
     }
 
+    if (dimRange) {
+      dimRange.addEventListener("input", () => {
+        state.settings.dimOpacity = Number(dimRange.value);
+        save();
+        applyTheme();
+        syncDimUI();
+      });
+    }
+
+    const dimScheduleChk = $("#dimScheduleChk");
+    if (dimScheduleChk) {
+      dimScheduleChk.addEventListener("change", () => {
+        state.settings.dimScheduleOnlyWhenChild = dimScheduleChk.checked;
+        save();
+        renderTodos();
+        renderSchedule();
+      });
+    }
+
     bindEditablePill(hVal, (value, restoreOnly) => {
       if (restoreOnly || value == null) return syncAccentUI();
       hRange.value = String(value);
@@ -2241,6 +2318,15 @@
       renderSchedule();
     });
 
+    bindEditablePill(dimVal, (value, restoreOnly) => {
+      if (restoreOnly || value == null) return syncDimUI();
+      dimRange.value = String(value);
+      state.settings.dimOpacity = Number(dimRange.value);
+      save();
+      applyTheme();
+      syncDimUI();
+    });
+
     $("#themeBtn").addEventListener("click", () => {
       if (!state.settings.accentHSL) {
         const rgb = hexToRgb(state.settings.accent || "#ff5aa5");
@@ -2248,6 +2334,7 @@
       }
       syncAccentUI();
       syncTintUI();
+      syncDimUI();
       syncThemeUI();
       openPopover(accentPop, $("#themeBtn"));
     });
@@ -2929,6 +3016,7 @@
 
     const todoInput = $("#todoInput");
     const todoList = $("#todoList");
+    const rowsEl = $("#rows");
 
     todoInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
@@ -3057,7 +3145,7 @@
         item.addEventListener("mouseenter", () => applyTodoDim(todo));
         item.addEventListener("mouseleave", (e) => {
           if (item.contains(e.relatedTarget)) return;
-          clearAllDim();
+          scheduleDimClear();
         });
 
         item.addEventListener("dragover", (e) => e.preventDefault());
@@ -3130,7 +3218,6 @@ function deleteSlot(dk, t) {
       return true;
     }
 
-    const rowsEl = $("#rows");
     const nowLine = $("#nowLine");
     const nowPill = $("#nowPill");
 
@@ -3191,9 +3278,10 @@ function deleteSlot(dk, t) {
         if (parentName) infoIcon.removeAttribute("title");
         infoIcon.textContent = "ⓘ";
         const clearDim = () => {
-          clearAllDim();
+          scheduleDimClear();
         };
         const applyDim = () => {
+          cancelDimClear();
           rowsEl.querySelectorAll(".row").forEach((r) => r.classList.add("dim"));
           todoList.querySelectorAll(".item").forEach((i) => i.classList.add("dim"));
           row.classList.remove("dim");
