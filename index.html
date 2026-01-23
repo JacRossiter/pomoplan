@@ -432,7 +432,7 @@
 
     .item {
       display: grid;
-      grid-template-columns: 20px 1fr 18px 18px;
+      grid-template-columns: 20px 1fr 18px 18px 18px;
       align-items: center;
       gap: 8px;
       padding: var(--itemPad);
@@ -453,6 +453,57 @@
       background: var(--surface-strong);
       border-color: color-mix(in srgb, var(--border) 70%, white 30%);
       box-shadow: none;
+    }
+
+    .item.child {
+      margin-left: 16px;
+      padding-left: 12px;
+      position: relative;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .item.child .handle {
+      opacity: 1;
+      pointer-events: none;
+    }
+
+    .item.child .handle::before {
+      opacity: 0;
+    }
+
+    .item.child .handle::after {
+      content: "";
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--muted);
+      opacity: 0.7;
+    }
+
+    .item.child:hover .handle::after,
+    .item.child .handle:hover::after {
+      opacity: 0;
+    }
+
+    .item.child:hover .handle,
+    .item.child .handle:hover {
+      pointer-events: auto;
+    }
+
+    .item.child:hover .handle::before,
+    .item.child .handle:hover::before {
+      opacity: 0.9;
+    }
+
+    .item.parent-highlight {
+      border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 45%, transparent);
+      background: color-mix(in srgb, var(--surface) 70%, var(--primary) 8%);
+    }
+
+    .drag-hidden {
+      display: none;
     }
 
     .item.done .todo-text {
@@ -492,7 +543,26 @@
       background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 5 6 21 6'/><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/><path d='M10 11v6'/><path d='M14 11v6'/><path d='M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2'/></svg>");
       background-repeat: no-repeat;
       background-position: center;
-      background-size: 18px 18px;
+      background-size: 14px 14px;
+    }
+
+    .todo-split {
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 160ms var(--ease), color 160ms var(--ease), transform 160ms var(--ease);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='5' x2='12' y2='19'/><line x1='5' y1='12' x2='19' y2='12'/></svg>");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 16px 16px;
     }
 
     .item:hover .todo-delete,
@@ -501,10 +571,21 @@
       opacity: 1;
     }
 
+    .item:hover .todo-split,
+    .todo-split:hover,
+    .todo-split:focus-visible {
+      opacity: 1;
+    }
+
     .todo-delete:hover {
       color: var(--text);
       border-color: color-mix(in srgb, var(--border) 60%, white 40%);
       background-color: transparent;
+      transform: scale(1.25);
+    }
+
+    .todo-split:hover {
+      color: var(--text);
       transform: scale(1.25);
     }
 
@@ -592,6 +673,11 @@
       box-shadow: var(--lift);
     }
 
+    .drag-source {
+      opacity: 0.35;
+    }
+
+
     .row.release,
     .item.release {
       transition: transform 380ms var(--ease-smooth);
@@ -647,6 +733,47 @@
       background: rgba(255, 255, 255, 0.04);
     }
 
+    .todo-ghost {
+      height: var(--rowH);
+      padding: var(--itemPad);
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      align-items: center;
+      gap: 8px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      max-width: 380px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .todo-ghost-time {
+      justify-self: start;
+      font-size: 11px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px 6px;
+      min-width: 48px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .todo-ghost-time.is-empty {
+      opacity: 0;
+      border-color: transparent;
+    }
+
+    .todo-ghost-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+
     .drag-ghost.ghost-row .ghost-text {
       font-size: 13px;
       color: var(--text);
@@ -701,7 +828,7 @@
     .row {
       height: var(--rowH);
       display: grid;
-      grid-template-columns: 66px 20px 1fr 18px;
+      grid-template-columns: 66px 20px 1fr auto;
       align-items: center;
       border-bottom: 1px solid var(--border);
       padding: var(--rowPad);
@@ -770,6 +897,64 @@
       opacity: 0.75;
     }
 
+    .row-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      justify-self: end;
+    }
+
+    .row-delete {
+      width: 18px;
+      height: 18px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 160ms var(--ease), transform 160ms var(--ease);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 5 6 21 6'/><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/><path d='M10 11v6'/><path d='M14 11v6'/><path d='M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2'/></svg>");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 14px 14px;
+    }
+
+    .row:hover .row-delete,
+    .row-delete:hover,
+    .row-delete:focus-visible {
+      opacity: 1;
+    }
+
+    .row-delete:hover {
+      transform: scale(1.25);
+    }
+
+    .info-icon {
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1;
+      opacity: 0;
+      pointer-events: none;
+      flex: 0 0 16px;
+    }
+
+    .row:hover .info-icon {
+      opacity: 0.8;
+      pointer-events: auto;
+    }
+
+    .row.dim {
+      opacity: 0.25;
+    }
+
+    .item.dim {
+      opacity: 0.25;
+    }
+
     .nowline {
       position: absolute;
       left: 0;
@@ -817,6 +1002,47 @@
       box-shadow: var(--shadow);
       padding: 12px;
       display: none;
+    }
+
+    #errorToast {
+      width: auto;
+      max-width: 320px;
+      background: #5b1f1f;
+      border-color: #7a2b2b;
+      color: #ffe5e5;
+      padding: 10px 12px;
+      font-size: 12px;
+      border-radius: 10px;
+      box-shadow: none;
+      display: none;
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      z-index: 80;
+    }
+
+    #errorToast.show {
+      display: block;
+    }
+
+    .info-tooltip {
+      position: fixed;
+      z-index: 90;
+      background: #1f1f1f;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity 80ms var(--ease), transform 80ms var(--ease);
+    }
+
+    .info-tooltip.show {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .pop-title {
@@ -1291,6 +1517,8 @@
       </div>
     </div>
   </div>
+  <div id="errorToast" class="popover" role="status" aria-live="polite"></div>
+  <div id="infoTip" class="info-tooltip" role="status" aria-live="polite"></div>
 
   <div id="welcomePop" class="popover welcome-pop" role="dialog" aria-label="Welcome">
     <div class="pop-title">Welcome to Daily Scheduler</div>
@@ -1504,7 +1732,13 @@
       if (!entry) return null;
       if (typeof entry === "string") return { id: makeId(), text: entry, done: false };
       if (typeof entry === "object") {
-        return { id: entry.id || makeId(), text: entry.text ?? "", done: !!entry.done };
+        return {
+          id: entry.id || makeId(),
+          text: entry.text ?? "",
+          done: !!entry.done,
+          parentId: entry.parentId ?? null,
+          parentName: entry.parentName ?? null
+        };
       }
       return null;
     }
@@ -1513,7 +1747,13 @@
       if (!entry) return null;
       if (typeof entry === "string") return { id: makeId(), text: entry, done: false };
       if (typeof entry === "object") {
-        return { id: entry.id || makeId(), text: entry.text ?? "", done: !!entry.done };
+        return {
+          id: entry.id || makeId(),
+          text: entry.text ?? "",
+          done: !!entry.done,
+          parentId: entry.parentId ?? null,
+          parentName: entry.parentName ?? null
+        };
       }
       return null;
     }
@@ -1614,6 +1854,7 @@
     const settingsPop = $("#settingsPop");
     const welcomePop = $("#welcomePop");
     const undoBtn = $("#undoBtn");
+    const infoTip = $("#infoTip");
     const slot30Btn = $("#slot30");
     const slot60Btn = $("#slot60");
     const startTimeSel = $("#startTime");
@@ -1624,6 +1865,70 @@
     const welcomeHelpBtn = $("#welcomeHelpBtn");
     let openPop = null;
     const deletedStack = [];
+    let pendingFocusId = null;
+
+    function findTodoById(id) {
+      return state.todos.find((t) => t.id === id) || null;
+    }
+
+    function isParentTodo(todo) {
+      if (!todo) return false;
+      return state.todos.some((t) => t.parentId === todo.id);
+    }
+
+    function getTodoGroupIds(rootId) {
+      const ids = new Set();
+      const queue = [rootId];
+      while (queue.length) {
+        const cur = queue.shift();
+        if (!cur || ids.has(cur)) continue;
+        ids.add(cur);
+        state.todos.forEach((t) => {
+          if (t.parentId === cur) queue.push(t.id);
+        });
+      }
+      return ids;
+    }
+
+    function findInsertIndexForParent(list, parentId, fallbackId) {
+      let lastIdx = -1;
+      let parentIdx = -1;
+      list.forEach((t, i) => {
+        if (t.id === parentId) parentIdx = i;
+        if (t.parentId === parentId) lastIdx = i;
+      });
+      const baseIdx = lastIdx !== -1 ? lastIdx : parentIdx;
+      if (baseIdx !== -1) return baseIdx + 1;
+      if (fallbackId) {
+        const hoverIdx = list.findIndex((t) => t.id === fallbackId);
+        if (hoverIdx !== -1) return hoverIdx;
+      }
+      return list.length;
+    }
+
+    function showError(msg) {
+      const toast = $("#errorToast");
+      if (!toast) return;
+      toast.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(showError._t);
+      showError._t = setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+
+    function clearAllDim() {
+      rowsEl.querySelectorAll(".row").forEach((r) => r.classList.remove("dim"));
+      todoList.querySelectorAll(".item").forEach((i) => i.classList.remove("dim"));
+    }
+
+    function getHoverTodoIdFromPoint(x, y) {
+      const els = document.elementsFromPoint(x, y);
+      for (const el of els) {
+        const item = el.closest?.(".item");
+        const id = item?.dataset?.todoId;
+        if (id) return id;
+      }
+      return null;
+    }
 
     function openPopover(pop, anchorEl) {
       closePopover();
@@ -2010,7 +2315,11 @@
       pending: false,
       startX: 0,
       startY: 0,
-      originalTime: null
+      originalTime: null,
+      groupIds: null,
+      groupCount: 1,
+      hiddenEls: null,
+      hoverTodoId: null
     };
 
     function resetScheduleTimes() {
@@ -2043,8 +2352,17 @@
       pointerDrag.fromDateKey = config.fromDateKey ?? null;
       pointerDrag.originalTime = config.fromTime ?? null;
       pointerDrag.sourceEl = config.draggingEl ?? null;
+      if (pointerDrag.type === "todo" && pointerDrag.fromIndex != null) {
+        const rootId = state.todos[pointerDrag.fromIndex]?.id;
+        pointerDrag.groupIds = rootId ? getTodoGroupIds(rootId) : null;
+        pointerDrag.groupCount = pointerDrag.groupIds ? pointerDrag.groupIds.size : 1;
+      } else {
+        pointerDrag.groupIds = null;
+        pointerDrag.groupCount = 1;
+      }
       pointerDrag.targetType = null;
       pointerDrag.targetIndex = null;
+      pointerDrag.hoverTodoId = null;
 
       if (!pointerDrag.sourceEl) return;
 
@@ -2063,35 +2381,53 @@
       const rect = pointerDrag.sourceEl.getBoundingClientRect();
       pointerDrag.offsetX = e.clientX - rect.left;
       pointerDrag.offsetY = e.clientY - rect.top;
-      document.documentElement.style.setProperty("--dragGap", `${Math.round(rect.height)}px`);
+      const gapHeight = pointerDrag.type === "todo" ? Math.round(rect.height * (pointerDrag.groupCount || 1)) : Math.round(rect.height);
+      document.documentElement.style.setProperty("--dragGap", `${gapHeight}px`);
 
-      const ghost = pointerDrag.sourceEl.cloneNode(true);
-      ghost.classList.add("drag-ghost");
+      let ghost;
       if (pointerDrag.type === "todo") {
-        ghost.classList.add("ghost-row");
+        ghost = document.createElement("div");
+        ghost.className = "drag-ghost todo-ghost";
         const todoText = pointerDrag.sourceEl.querySelector(".todo-text")?.textContent ?? "";
-        ghost.innerHTML = "";
         const time = document.createElement("div");
-        time.className = "time";
+        time.className = "todo-ghost-time";
         time.textContent = "";
-        const handleSpacer = document.createElement("div");
         const text = document.createElement("div");
-        text.className = "ghost-text";
-        text.textContent = todoText;
-        const checkSpacer = document.createElement("div");
-        ghost.append(time, handleSpacer, text, checkSpacer);
+        text.className = "todo-ghost-text";
+        text.textContent = todoText || " ";
+        ghost.append(time, text);
+      } else {
+        ghost = pointerDrag.sourceEl.cloneNode(true);
+        ghost.classList.add("drag-ghost");
       }
       ghost.style.width = `${rect.width}px`;
       ghost.style.height = `${rect.height}px`;
       ghost.style.transform = `translate3d(${rect.left}px, ${rect.top}px, 0)`;
+      ghost.style.opacity = "1";
       document.body.appendChild(ghost);
       pointerDrag.ghostEl = ghost;
 
       pointerDrag.sourceEl.classList.add("dragging");
       document.body.classList.add("dragging");
-      pointerDrag.sourceEl.style.display = "none";
+      if (pointerDrag.type === "todo") {
+        pointerDrag.sourceEl.classList.add("drag-source");
+      } else {
+        pointerDrag.sourceEl.style.display = "none";
+      }
 
       if (pointerDrag.type === "todo") {
+        if (pointerDrag.groupIds && pointerDrag.groupIds.size > 1) {
+          const hidden = [];
+          todoList.querySelectorAll(".item").forEach((el) => {
+            if (el === pointerDrag.sourceEl) return;
+            const id = el.dataset.todoId;
+            if (id && pointerDrag.groupIds.has(id)) {
+              el.classList.add("drag-hidden");
+              hidden.push(el);
+            }
+          });
+          pointerDrag.hiddenEls = hidden;
+        }
         const placeholder = document.createElement("div");
         placeholder.className = "drag-placeholder";
         pointerDrag.placeholderEl = placeholder;
@@ -2104,6 +2440,12 @@
       const timeEl = pointerDrag.ghostEl.querySelector(".time");
       if (timeEl) {
         timeEl.textContent = timeText || "";
+        return;
+      }
+      const todoTime = pointerDrag.ghostEl.querySelector(".todo-ghost-time");
+      if (todoTime) {
+        todoTime.textContent = timeText || "";
+        todoTime.classList.toggle("is-empty", !timeText);
         return;
       }
       const badge = pointerDrag.ghostEl.querySelector(".ghost-time");
@@ -2173,12 +2515,26 @@
 
       if (el && todoList.contains(el)) {
         pointerDrag.targetType = "todo";
+        pointerDrag.hoverTodoId = getHoverTodoIdFromPoint(e.clientX, e.clientY);
+        todoList.querySelectorAll(".item.parent-highlight").forEach((i) => i.classList.remove("parent-highlight"));
+        if (pointerDrag.hoverTodoId) {
+          const hoverTodo = state.todos.find((t) => t.id === pointerDrag.hoverTodoId);
+          const parentId = hoverTodo?.parentId || hoverTodo?.id;
+          if (parentId) {
+            const parentItem = todoList.querySelector(`.item[data-todo-id="${parentId}"]`);
+            if (parentItem) parentItem.classList.add("parent-highlight");
+          }
+        }
         if (!pointerDrag.placeholderEl) {
           const placeholder = document.createElement("div");
           placeholder.className = "drag-placeholder";
           pointerDrag.placeholderEl = placeholder;
         }
-        const items = Array.from(todoList.querySelectorAll(".item")).filter((item) => item !== pointerDrag.sourceEl);
+        const items = Array.from(todoList.querySelectorAll(".item")).filter((item) => {
+          if (item === pointerDrag.sourceEl) return false;
+          if (pointerDrag.groupIds && item.dataset.todoId && pointerDrag.groupIds.has(item.dataset.todoId)) return false;
+          return true;
+        });
         let targetIndex = items.length;
         for (let i = 0; i < items.length; i += 1) {
           const r = items[i].getBoundingClientRect();
@@ -2208,6 +2564,8 @@
       } else if (pointerDrag.type === "todo") {
         setGhostTimeLabel("");
       }
+      pointerDrag.hoverTodoId = null;
+      todoList.querySelectorAll(".item.parent-highlight").forEach((i) => i.classList.remove("parent-highlight"));
       resetScheduleTimes();
       if (hoveredRow) hoveredRow.classList.remove("insert-gap");
       hoveredRow = null;
@@ -2219,8 +2577,12 @@
       }
       if (pointerDrag.sourceEl) {
         pointerDrag.sourceEl.classList.remove("dragging");
+        pointerDrag.sourceEl.classList.remove("drag-source");
         pointerDrag.sourceEl.style.display = "";
         pointerDrag.sourceEl.style.visibility = "";
+      }
+      if (pointerDrag.hiddenEls?.length) {
+        pointerDrag.hiddenEls.forEach((el) => el.classList.remove("drag-hidden"));
       }
       if (pointerDrag.ghostEl) pointerDrag.ghostEl.remove();
       if (pointerDrag.placeholderEl) pointerDrag.placeholderEl.remove();
@@ -2241,6 +2603,11 @@
       pointerDrag.pointerId = null;
       pointerDrag.handleEl = null;
       pointerDrag.originalTime = null;
+      pointerDrag.groupIds = null;
+      pointerDrag.groupCount = 1;
+      pointerDrag.hiddenEls = null;
+      pointerDrag.hoverTodoId = null;
+      todoList.querySelectorAll(".item.parent-highlight").forEach((i) => i.classList.remove("parent-highlight"));
     }
 
     function onPointerCancel() {
@@ -2263,13 +2630,53 @@
       if (targetType === "todo" && pointerDrag.type === "todo" && targetIndex != null) {
         const from = pointerDrag.fromIndex;
         if (from != null) {
-          const [moved] = state.todos.splice(from, 1);
-          const insertIdx = Math.max(0, targetIndex);
-          state.todos.splice(insertIdx, 0, moved);
+          const root = state.todos[from];
+          const groupIds = pointerDrag.groupIds ?? (root ? new Set([root.id]) : new Set());
+          const remaining = state.todos.filter((t) => !groupIds.has(t.id));
+          const group = state.todos.filter((t) => groupIds.has(t.id));
+          const insertBaseIdx = Math.max(0, Math.min(targetIndex, remaining.length));
+          const hoverTodo = pointerDrag.hoverTodoId ? remaining.find((t) => t.id === pointerDrag.hoverTodoId) : null;
+          const targetTodo = hoverTodo || remaining[insertBaseIdx] || null;
+          const isRootParent = isParentTodo(root);
+          let newParentId = root?.parentId ?? null;
+          let newParentName = root?.parentName ?? null;
+
+          if (targetTodo && root) {
+            if (targetTodo.parentId) {
+              newParentId = targetTodo.parentId;
+              const parent = findTodoById(newParentId);
+              newParentName = parent?.text || targetTodo.parentName || "Unknown";
+            } else {
+              const parentIdx = remaining.findIndex((t) => t.id === targetTodo.id);
+              if (insertBaseIdx <= parentIdx && !hoverTodo) {
+                newParentId = null;
+                newParentName = null;
+              } else {
+                newParentId = targetTodo.id;
+                newParentName = targetTodo.text || "Parent task";
+              }
+            }
+          }
+
+          if (group[0]) {
+            group[0].parentId = newParentId || null;
+            group[0].parentName = newParentName || null;
+          }
+
+          let insertIdx = insertBaseIdx;
+          if (newParentId) {
+            insertIdx = findInsertIndexForParent(remaining, newParentId, hoverTodo?.id || null);
+          }
+          state.todos = [...remaining.slice(0, insertIdx), ...group, ...remaining.slice(insertIdx)];
         }
       } else if (targetType === "schedule" && pointerDrag.type === "todo" && targetIndex != null) {
         const item = state.todos[pointerDrag.fromIndex];
         if (item) {
+          if (isParentTodo(item)) {
+            showError("Parent tasks can't be moved into the schedule.");
+            finalizePointerDrag();
+            return;
+          }
           const targetTime = TIMES[Math.min(targetIndex, TIMES.length - 1)];
           const inserted = insertIntoSchedule(dk, targetTime, item);
           if (inserted) state.todos.splice(pointerDrag.fromIndex, 1);
@@ -2341,6 +2748,10 @@
       state.todos.forEach((todo, idx) => {
         const item = document.createElement("div");
         item.className = "item";
+        item.dataset.todoId = todo.id;
+        if (todo.parentId) item.classList.add("child");
+        if (todo.parentId) item.dataset.parentId = todo.parentId;
+        const isParent = isParentTodo(todo);
         if (todo.done) item.classList.add("done");
 
         const handle = createHandle({
@@ -2371,6 +2782,28 @@
             e.preventDefault();
             label.blur();
           }
+        });
+
+        const splitBtn = document.createElement("button");
+        splitBtn.type = "button";
+        splitBtn.className = "todo-split";
+        splitBtn.setAttribute("aria-label", "Add subtask");
+        splitBtn.addEventListener("click", () => {
+          const child = {
+            id: makeId(),
+            text: "Subtask...",
+            done: false,
+            parentId: todo.id,
+            parentName: todo.text
+          };
+          let insertIdx = idx + 1;
+          for (let i = idx + 1; i < state.todos.length; i += 1) {
+            if (state.todos[i].parentId === todo.id) insertIdx = i + 1;
+          }
+          state.todos.splice(insertIdx, 0, child);
+          pendingFocusId = child.id;
+          save();
+          renderTodos();
         });
 
         const delBtn = document.createElement("button");
@@ -2406,8 +2839,14 @@
           e.stopPropagation();
         });
 
-        item.append(handle, label, delBtn, tickBtn);
+        item.append(handle, label, splitBtn, delBtn, tickBtn);
         todoList.appendChild(item);
+
+        if (pendingFocusId && pendingFocusId === todo.id) {
+          pendingFocusId = null;
+          label.focus();
+          document.getSelection()?.selectAllChildren(label);
+        }
       });
       updateUndoButton();
     }
@@ -2511,6 +2950,54 @@ function deleteSlot(dk, t) {
         input.placeholder = "Type task...";
         input.value = slotText;
 
+        const infoIcon = document.createElement("span");
+        infoIcon.className = "info-icon";
+        infoIcon.setAttribute("aria-label", "Parent task info");
+        const parentName = slotItem?.parentId ? (findTodoById(slotItem.parentId)?.text || slotItem.parentName || "Unknown") : "";
+        if (parentName) infoIcon.removeAttribute("title");
+        infoIcon.textContent = "ⓘ";
+        const clearDim = () => {
+          clearAllDim();
+        };
+        const applyDim = () => {
+          rowsEl.querySelectorAll(".row").forEach((r) => r.classList.add("dim"));
+          todoList.querySelectorAll(".item").forEach((i) => i.classList.add("dim"));
+          row.classList.remove("dim");
+          const parentRow = rowsEl.querySelector(`.row[data-parent-id="${slotItem.parentId}"]`);
+          if (parentRow) parentRow.classList.remove("dim");
+          if (slotItem.parentId) {
+            const parentItem = todoList.querySelector(`.item[data-todo-id="${slotItem.parentId}"]`);
+            if (parentItem) parentItem.classList.remove("dim");
+            todoList.querySelectorAll(`.item[data-parent-id="${slotItem.parentId}"]`).forEach((i) => i.classList.remove("dim"));
+          }
+        };
+        if (parentName) {
+          infoIcon.dataset.parentName = parentName;
+          infoIcon.addEventListener("mouseenter", applyDim);
+          infoIcon.addEventListener("mouseenter", () => {
+            if (infoTip) {
+              infoTip.textContent = `Child of ${parentName}`;
+              const rect = infoIcon.getBoundingClientRect();
+              const left = Math.min(rect.left, window.innerWidth - infoTip.offsetWidth - 8);
+              const top = Math.min(window.innerHeight - 8, rect.bottom + 6);
+              infoTip.style.left = `${left}px`;
+              infoTip.style.top = `${top}px`;
+              infoTip.classList.add("show");
+            }
+          });
+          infoIcon.addEventListener("mouseleave", () => {
+            if (row.matches(":hover")) return;
+            if (infoTip) infoTip.classList.remove("show");
+            clearDim();
+          });
+          row.addEventListener("mouseenter", applyDim);
+          row.addEventListener("mouseleave", (e) => {
+            if (row.contains(e.relatedTarget)) return;
+            if (infoTip) infoTip.classList.remove("show");
+            clearDim();
+          });
+        }
+
         const tickBtn = document.createElement("button");
         tickBtn.type = "button";
         tickBtn.className = "tick-btn";
@@ -2519,6 +3006,17 @@ function deleteSlot(dk, t) {
         tickBtn.addEventListener("click", () => {
           setSlotDone(dk, tkey, !slotItem?.done);
           save();
+          renderSchedule();
+        });
+
+        const delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.className = "row-delete";
+        delBtn.setAttribute("aria-label", "Delete task");
+        delBtn.addEventListener("click", () => {
+          deleteSlot(dk, tkey);
+          save();
+          clearAllDim();
           renderSchedule();
         });
 
@@ -2534,7 +3032,21 @@ function deleteSlot(dk, t) {
           tickCountdown(true);
         });
 
-        row.append(time, handle, input, tickBtn);
+        const actions = document.createElement("div");
+        actions.className = "row-actions";
+        if (slotItem?.parentId) actions.appendChild(infoIcon);
+        actions.appendChild(delBtn);
+        actions.appendChild(tickBtn);
+        if (parentName) {
+          actions.addEventListener("mouseenter", applyDim);
+          actions.addEventListener("mouseleave", (e) => {
+            if (row.contains(e.relatedTarget)) return;
+            if (infoTip) infoTip.classList.remove("show");
+            clearDim();
+          });
+        }
+        row.append(time, handle, input, actions);
+        if (slotItem?.parentId) row.dataset.parentId = slotItem.parentId;
         rowsEl.appendChild(row);
 
       });
@@ -2688,19 +3200,4 @@ function deleteSlot(dk, t) {
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
