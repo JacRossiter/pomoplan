@@ -115,6 +115,24 @@
       white-space: nowrap;
     }
 
+    .countdown-panel {
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 54px;
+    }
+
+    .countdown-panel .countdown {
+      width: 100%;
+      text-align: center;
+      font-size: 24px;
+      letter-spacing: 0.08em;
+      background: none;
+      padding: 0;
+      border-radius: 0;
+    }
+
     .hdr-actions {
       display: flex;
       gap: 8px;
@@ -1371,7 +1389,6 @@
   <header>
     <div class="hdr-left">
       <div class="app-title">Pomoplan</div>
-      <div id="countdown" class="countdown">--:--</div>
     </div>
     <div class="hdr-actions">
       <button id="themeBtn" class="btn" title="Theme" aria-label="Theme">
@@ -1405,6 +1422,9 @@
         </div>
 
         <div class="cal-grid" id="calGrid"></div>
+      </div>
+      <div class="card countdown-panel">
+        <div id="countdown" class="countdown">--:--</div>
       </div>
       <div class="card todo-card">
         <div class="todo-header">
