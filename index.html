@@ -115,6 +115,250 @@
       white-space: nowrap;
     }
 
+    .timer-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+      overflow: hidden;
+      min-height: 140px;
+    }
+
+
+    .timer-title {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .timer-display {
+      width: 100%;
+      text-align: center;
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      padding: 0;
+      border-radius: 12px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+    }
+
+    .timer-surface,
+    .timer-locked {
+      transition: opacity 200ms var(--ease), transform 200ms var(--ease);
+    }
+
+    .timer-locked {
+      border-radius: 14px;
+      padding: 18px 24px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      background:
+        radial-gradient(600px 200px at 50% -40%, rgba(255, 255, 255, 0.18), transparent 60%),
+        color-mix(in srgb, var(--primary) 16%, var(--card));
+      border: 1px solid color-mix(in srgb, var(--primary) 45%, var(--border));
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      text-align: center;
+    }
+
+    .timer-card.is-locked .timer-surface {
+      display: none;
+    }
+
+    .timer-card.is-locked .timer-locked {
+      display: flex;
+    }
+
+    .locked-label {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: color-mix(in srgb, var(--text) 90%, transparent);
+    }
+
+    .locked-task {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.25;
+      max-width: 520px;
+      text-wrap: balance;
+    }
+
+    .locked-countdown {
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+    }
+
+    .locked-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: -2px;
+    }
+
+    .locked-elapsed {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .locked-sub {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .locked-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 6px;
+      width: 100%;
+      justify-content: center;
+      margin-top: auto;
+    }
+
+    .unlock-btn {
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 160ms var(--ease), filter 160ms var(--ease);
+    }
+
+    .unlock-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    .timer-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .lock-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 22px;
+      font-weight: 800;
+      background: var(--primary);
+      color: #fff;
+      cursor: pointer;
+      transition: transform 160ms var(--ease), filter 160ms var(--ease);
+    }
+
+    .lock-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    .lock-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+    }
+
+    .lock-status {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      max-width: 420px;
+      line-height: 1.3;
+    }
+
+    .lock-chooser {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: none;
+    }
+
+    .lock-chooser.show {
+      display: block;
+    }
+
+    .lock-chooser-title {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .lock-chooser-input {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .lock-input {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .lock-set-btn {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .lock-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .lock-pill {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .timer-meta {
+      display: grid;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .timer-meta span {
+      color: var(--text);
+    }
+
     .hdr-actions {
       display: flex;
       gap: 8px;
@@ -870,6 +1114,15 @@
       transition: background 160ms var(--ease), border-color 160ms var(--ease), transform 220ms var(--ease-smooth), margin-top 220ms var(--ease-smooth);
     }
 
+    .row.locked {
+      background: color-mix(in srgb, var(--primary) 10%, transparent);
+    }
+
+    .row.locked .editor {
+      border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+      background: color-mix(in srgb, transparent 70%, var(--primary));
+    }
+
     .row.parent-color .editor {
       background: color-mix(in srgb, transparent 70%, var(--parentTint));
       border-color: color-mix(in srgb, var(--border) 70%, var(--parentBorder));
@@ -1371,7 +1624,6 @@
   <header>
     <div class="hdr-left">
       <div class="app-title">Pomoplan</div>
-      <div id="countdown" class="countdown">--:--</div>
     </div>
     <div class="hdr-actions">
       <button id="themeBtn" class="btn" title="Theme" aria-label="Theme">
@@ -1424,6 +1676,35 @@
     </div>
 
     <div class="col right">
+      <div class="card timer-card">
+        <div class="timer-surface">
+          <div id="countdown" class="countdown timer-display">--:--</div>
+          <div class="timer-actions">
+            <button id="lockBtn" class="lock-btn" type="button">Lock In</button>
+            <div id="lockStatus" class="lock-status">Not locked</div>
+          </div>
+          <div id="lockChooser" class="lock-chooser" aria-hidden="true">
+            <div class="lock-chooser-title">Pick a task for this block</div>
+            <div class="lock-chooser-input">
+              <input id="lockInput" class="lock-input" type="text" placeholder="Type task..." />
+              <button id="lockSetBtn" class="lock-set-btn" type="button">Set</button>
+            </div>
+            <div id="lockTodoPills" class="lock-pills"></div>
+          </div>
+        </div>
+        <div class="timer-locked" aria-hidden="true">
+          <div class="locked-label">Locked In</div>
+          <div id="lockedCountdown" class="locked-countdown">--:--</div>
+          <div id="lockedTask" class="locked-task">Focused block</div>
+          <div class="locked-sub">
+            <div id="lockedMeta" class="locked-meta">00:00-00:00</div>
+            <div id="lockedElapsed" class="locked-elapsed">Locked for 00:00</div>
+          </div>
+          <div class="locked-actions">
+            <button id="unlockBtn" class="unlock-btn" type="button">Unlock</button>
+          </div>
+        </div>
+      </div>
       <div class="card">
         <div class="sched-head">
           <h3 class="sched-title" id="dateLabel"></h3>
@@ -1804,6 +2085,7 @@
           onlyIfTask: true
         }
       },
+      blockLocks: {},
       todos: [],
       schedules: {}
     };
@@ -1900,6 +2182,14 @@
       state.settings.taskTintSat = state.settings.taskTintSat ?? baseSettings.taskTintSat;
       state.settings.dimOpacity = state.settings.dimOpacity ?? baseSettings.dimOpacity;
       state.settings.dimScheduleOnlyWhenChild = state.settings.dimScheduleOnlyWhenChild ?? baseSettings.dimScheduleOnlyWhenChild;
+      if (!state.blockLocks || typeof state.blockLocks !== "object") state.blockLocks = {};
+      Object.keys(state.blockLocks).forEach((k) => {
+        const entry = state.blockLocks[k];
+        if (entry === true) state.blockLocks[k] = { startedAt: Date.now() };
+        if (entry && typeof entry === "object" && typeof entry.startedAt !== "number") {
+          state.blockLocks[k] = { startedAt: Date.now() };
+        }
+      });
       state.todos = Array.isArray(state.todos) ? state.todos.map(normalizeTodo).filter(Boolean) : [];
       if (!state.schedules || typeof state.schedules !== "object") state.schedules = {};
       Object.keys(state.schedules).forEach((dk) => {
@@ -1968,6 +2258,33 @@
       const item = getSlotItem(dk, t);
       if (!item) return;
       item.done = !!done;
+    }
+
+    function lockKey(dk, t) {
+      return `${dk}|${t}`;
+    }
+
+    function isBlockLocked(dk, t) {
+      return !!state.blockLocks?.[lockKey(dk, t)];
+    }
+
+    function getLockInfo(dk, t) {
+      const info = state.blockLocks?.[lockKey(dk, t)];
+      if (!info) return null;
+      if (typeof info === "object" && typeof info.startedAt === "number") return info;
+      return { startedAt: Date.now() };
+    }
+
+    function setBlockLocked(dk, t, locked) {
+      if (!state.blockLocks || typeof state.blockLocks !== "object") state.blockLocks = {};
+      const key = lockKey(dk, t);
+      if (locked) {
+        const existing = state.blockLocks[key];
+        if (existing && typeof existing === "object" && typeof existing.startedAt === "number") return;
+        state.blockLocks[key] = { startedAt: Date.now() };
+      } else {
+        delete state.blockLocks[key];
+      }
     }
 
     function applyTheme() {
@@ -3273,6 +3590,7 @@ function deleteSlot(dk, t) {
 
         if (isPastTimeSlot(selected, tkey)) row.classList.add("past");
         if (slotItem?.done) row.classList.add("done");
+        if (isBlockLocked(dk, tkey)) row.classList.add("locked");
 
         const time = document.createElement("div");
         time.className = "time";
@@ -3504,12 +3822,200 @@ function deleteSlot(dk, t) {
     }
 
     const countdownEl = $("#countdown");
+    const timerNowEl = $("#timerNow");
+    const timerNextEl = $("#timerNext");
+    const lockBtn = $("#lockBtn");
+    const lockStatus = $("#lockStatus");
+    const lockChooser = $("#lockChooser");
+    const lockInput = $("#lockInput");
+    const lockSetBtn = $("#lockSetBtn");
+    const lockTodoPills = $("#lockTodoPills");
+    const unlockBtn = $("#unlockBtn");
+    const timerCard = document.querySelector(".timer-card");
+    const lockedTaskEl = $("#lockedTask");
+    const lockedMetaEl = $("#lockedMeta");
+    const lockedCountdownEl = $("#lockedCountdown");
+    const lockedElapsedEl = $("#lockedElapsed");
+    let pendingLockInfo = null;
+
+    function blockLabel(info) {
+      const endH = Math.floor(info.slotEndMins / 60);
+      const endM = info.slotEndMins % 60;
+      return `${info.timeKey}-${timeString(endH, endM)}`;
+    }
+
+    function formatDuration(totalSeconds) {
+      const secs = Math.max(0, Math.floor(totalSeconds));
+      const mins = Math.floor(secs / 60);
+      const rem = secs % 60;
+      return `${String(mins).padStart(2, "0")}:${String(rem).padStart(2, "0")}`;
+    }
+
+    function closeLockChooser() {
+      if (!lockChooser) return;
+      lockChooser.classList.remove("show");
+      lockChooser.setAttribute("aria-hidden", "true");
+      pendingLockInfo = null;
+      if (lockInput) lockInput.value = "";
+    }
+
+    function openLockChooser(info) {
+      if (!lockChooser) return;
+      pendingLockInfo = info;
+      lockChooser.classList.add("show");
+      lockChooser.setAttribute("aria-hidden", "false");
+      if (lockTodoPills) {
+        lockTodoPills.innerHTML = "";
+        const todos = state.todos.filter((t) => !t.done && t.text && t.text.trim());
+        const top = todos.slice(0, 6);
+        if (!top.length) {
+          const empty = document.createElement("div");
+          empty.className = "lock-status";
+          empty.textContent = "No todos yet.";
+          lockTodoPills.appendChild(empty);
+        } else {
+          top.forEach((todo) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "lock-pill";
+            btn.textContent = todo.text;
+            btn.addEventListener("click", () => setLockTask(todo.text));
+            lockTodoPills.appendChild(btn);
+          });
+        }
+      }
+      setTimeout(() => lockInput?.focus(), 0);
+    }
+
+    function setLockTask(text) {
+      const now = new Date();
+      if (!isSameDay(selected, now)) {
+        showError("Select today to lock in.");
+        closeLockChooser();
+        return;
+      }
+      const info = getCurrentBlockInfo();
+      if (!info || !pendingLockInfo) {
+        closeLockChooser();
+        return;
+      }
+      const dk = dateKey(selected);
+      const trimmed = text.trim();
+      if (!trimmed) {
+        showError("Type a task to lock in.");
+        return;
+      }
+      setSlotText(dk, info.timeKey, trimmed);
+      setBlockLocked(dk, info.timeKey, true);
+      save();
+      renderSchedule();
+      tickCountdown(true);
+      updateLockUI();
+      closeLockChooser();
+    }
+
+    function updateLockUI() {
+      if (!lockBtn || !lockStatus) return;
+      const now = new Date();
+      if (!isSameDay(selected, now)) {
+        lockBtn.disabled = true;
+        lockStatus.textContent = "Select today to lock in";
+        timerCard?.classList.remove("is-locked");
+        closeLockChooser();
+        return;
+      }
+      const info = getCurrentBlockInfo();
+      if (!info) {
+        lockBtn.disabled = true;
+        lockStatus.textContent = "Outside schedule";
+        timerCard?.classList.remove("is-locked");
+        closeLockChooser();
+        return;
+      }
+      lockBtn.disabled = false;
+      const dk = dateKey(selected);
+      const label = blockLabel(info);
+      const task = getSlotText(dk, info.timeKey).trim();
+      if (isBlockLocked(dk, info.timeKey)) {
+        lockBtn.textContent = "Unlock";
+        lockStatus.textContent = task ? `Locked: ${label} - ${task}` : `Locked: ${label}`;
+        timerCard?.classList.add("is-locked");
+        if (lockedTaskEl) lockedTaskEl.textContent = task || "Focused block";
+        if (lockedMetaEl) lockedMetaEl.textContent = label;
+        const lockInfo = getLockInfo(dk, info.timeKey);
+        if (lockedElapsedEl) {
+          const elapsedSecs = lockInfo ? (Date.now() - lockInfo.startedAt) / 1000 : 0;
+          lockedElapsedEl.textContent = `Locked for ${formatDuration(elapsedSecs)}`;
+        }
+        closeLockChooser();
+      } else {
+        lockBtn.textContent = "Lock In";
+        lockStatus.textContent = task ? `Ready: ${label} - ${task}` : `Ready: ${label}`;
+        timerCard?.classList.remove("is-locked");
+        if (pendingLockInfo && pendingLockInfo.timeKey !== info.timeKey) closeLockChooser();
+      }
+    }
+
+    function handleLockAction() {
+      const now = new Date();
+      if (!isSameDay(selected, now)) {
+        showError("Select today to lock in.");
+        return;
+      }
+      const info = getCurrentBlockInfo();
+      if (!info) {
+        showError("No active block right now.");
+        return;
+      }
+      const dk = dateKey(selected);
+      if (isBlockLocked(dk, info.timeKey)) {
+        setBlockLocked(dk, info.timeKey, false);
+        save();
+        renderSchedule();
+        updateLockUI();
+        return;
+      }
+      const existingText = getSlotText(dk, info.timeKey).trim();
+      if (!existingText) {
+        openLockChooser(info);
+        return;
+      }
+      setBlockLocked(dk, info.timeKey, true);
+      save();
+      renderSchedule();
+      updateLockUI();
+    }
+
+    if (lockBtn) {
+      lockBtn.addEventListener("click", handleLockAction);
+    }
+
+    if (unlockBtn) {
+      unlockBtn.addEventListener("click", handleLockAction);
+    }
+
+    if (lockSetBtn) {
+      lockSetBtn.addEventListener("click", () => setLockTask(lockInput?.value ?? ""));
+    }
+
+    if (lockInput) {
+      lockInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          setLockTask(lockInput.value);
+        }
+      });
+    }
 
     function tickCountdown(forceTitle = false) {
       const blockInfo = getCurrentBlockInfo();
       if (!blockInfo) {
         countdownEl.textContent = "--:--";
+        if (lockedCountdownEl) lockedCountdownEl.textContent = "--:--";
         if (forceTitle) document.title = "Pomoplan";
+        if (timerNowEl) timerNowEl.innerHTML = "Now: <span>?</span>";
+        if (timerNextEl) timerNextEl.innerHTML = "Next: <span>?</span>";
+        updateLockUI();
         return;
       }
 
@@ -3517,11 +4023,21 @@ function deleteSlot(dk, t) {
       const secs = Math.max(0, blockInfo.remainingSecs % 60);
       const formatted = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
       countdownEl.textContent = formatted;
+      if (lockedCountdownEl) lockedCountdownEl.textContent = formatted;
 
       const dk = dateKey(selected);
       const task = getSlotText(dk, blockInfo.timeKey);
       const titleTask = task ? ` - ${task}` : "";
-      document.title = `⏳ ${formatted}${titleTask}`;
+      document.title = `? ${formatted}${titleTask}`;
+
+      if (timerNowEl && timerNextEl) {
+        const nowText = (getSlotText(dk, blockInfo.timeKey) || "").trim();
+        const nextTimeKey = TIMES[blockInfo.slotIndex + 1] ?? "";
+        const nextText = nextTimeKey ? (getSlotText(dk, nextTimeKey) || "").trim() : "";
+        timerNowEl.innerHTML = `Now: <span>${nowText || "No task scheduled"}</span>`;
+        timerNextEl.innerHTML = `Next: <span>${nextText || "No task scheduled"}</span>`;
+      }
+      updateLockUI();
     }
 
     function init() {
