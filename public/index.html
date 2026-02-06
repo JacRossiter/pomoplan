@@ -4953,20 +4953,20 @@
         authBtn.textContent = "No cloud";
         authBtn.disabled = true;
         if (cloudSaveBtn) cloudSaveBtn.disabled = true;
-        if (saveStatus) saveStatus.textContent = "Autosave: unavailable";
+        if (saveStatus) saveStatus.textContent = "Last saved: unavailable";
         return;
       }
       if (!currentUser) {
         authStatus.textContent = "Not signed in";
         authBtn.textContent = "Sign in";
         authBtn.title = "Sign in with Google";
-        if (saveStatus) saveStatus.textContent = "Autosave: signed out";
+        if (saveStatus) saveStatus.textContent = "Last saved: local only";
       } else {
         const name = currentUser.displayName || currentUser.email || "Google user";
         authStatus.textContent = `Signed in as ${name}`;
         authBtn.textContent = "Sign out";
         authBtn.title = "Sign out";
-        if (saveStatus) saveStatus.textContent = "Autosave: waiting";
+        updateLastSavedLabel();
       }
       updateCloudSaveButton();
     }
@@ -4980,6 +4980,27 @@
       return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     }
 
+    function updateLastSavedLabel() {
+      if (!saveStatus) return;
+      if (!currentUser) {
+        saveStatus.textContent = "Last saved: local only";
+        return;
+      }
+      const latest = Math.max(lastCloudSaveAt || 0, lastAutoSaveAt || 0);
+      if (!latest) {
+        saveStatus.textContent = "Last saved: not yet";
+        return;
+      }
+      saveStatus.textContent = `Last saved: ${formatTimeAgo(latest)}`;
+    }
+
+    function withTimeout(promise, ms) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))
+      ]);
+    }
+
     function applyLoadedState() {
       normalizeState();
       START_H = state.settings.dayStart ?? 7;
@@ -4987,6 +5008,10 @@
       SLOT_MIN = state.settings.slotMinutes ?? 30;
       TIMES = allTimes(SLOT_MIN);
       applyTheme();
+      syncThemeUI();
+      syncAccentUI();
+      syncTintUI();
+      syncDimUI();
       syncScheduleUI();
       renderCalendar();
       renderTodos();
@@ -5048,53 +5073,65 @@
     async function saveCloudSnapshot(options = {}) {
       if (!firestore || !currentUser) {
         showError("Sign in to save to cloud.");
-        return;
+        return false;
       }
       const bypassCooldown = !!options.bypassCooldown;
-      if (bypassCooldown && !shouldAutoSave()) {
-        return;
+      const forceSave = !!options.force;
+      const isManual = !bypassCooldown && !forceSave;
+      if (!forceSave && bypassCooldown && !shouldAutoSave()) {
+        return false;
       }
-      if (!bypassCooldown) {
+      if (isManual) {
         const elapsed = Date.now() - lastCloudSaveAt;
         if (elapsed < CLOUD_SAVE_COOLDOWN_MS) {
           updateCloudSaveButton();
-          return;
+          return false;
         }
+        if (cloudSaveBtn) {
+          cloudSaveBtn.disabled = true;
+          cloudSaveBtn.textContent = "Saving...";
+        }
+        if (saveStatus) saveStatus.textContent = "Last saved: saving...";
       }
-      if (!bypassCooldown && cloudSaveBtn) {
-        cloudSaveBtn.disabled = true;
-        cloudSaveBtn.textContent = "Saving...";
-      }
+
       const snapshot = JSON.parse(JSON.stringify(state));
       const sizeBytes = estimateSizeBytes(snapshot);
       if (sizeBytes && sizeBytes > 900000) {
         showError("Save too large for a single cloud document.");
-        return;
+        if (isManual) updateCloudSaveButton();
+        return false;
       }
+
       try {
-        await firestore
-          .collection("users")
-          .doc(currentUser.uid)
-          .collection("history")
-          .add({
-            state: snapshot,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            createdAtMs: Date.now(),
-            deviceId: getDeviceId()
-          });        if (bypassCooldown) {
+        await withTimeout(
+          firestore
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("history")
+            .add({
+              state: snapshot,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              createdAtMs: Date.now(),
+              deviceId: getDeviceId()
+            }),
+          10000
+        );
+        if (bypassCooldown) {
           lastAutoSaveAt = Date.now();
-          if (saveStatus) saveStatus.textContent = `Autosave: ${formatTimeAgo(lastAutoSaveAt)}`;
         } else {
           lastCloudSaveAt = Date.now();
           updateCloudSaveButton();
-          if (saveStatus) saveStatus.textContent = `Saved: ${formatTimeAgo(lastCloudSaveAt)}`;
           showToast("Saved to cloud", "success");
         }
         cloudDirty = false;
+        updateLastSavedLabel();
+        return true;
       } catch (err) {
-        showError("Cloud save failed.");
-        if (!bypassCooldown) updateCloudSaveButton();
+        const msg = err && err.message === "timeout" ? "Cloud save timed out." : "Cloud save failed.";
+        showError(msg);
+        if (isManual) updateCloudSaveButton();
         console.error(err);
+        return false;
       }
     }
 
@@ -5102,6 +5139,8 @@
       if (!firebaseAuth) return;
       try {
         if (currentUser) {
+          cloudDirty = true;
+          await saveCloudSnapshot({ force: true, bypassCooldown: true, reason: "signout" });
           await firebaseAuth.signOut();
         } else {
           const provider = new firebase.auth.GoogleAuthProvider();
@@ -5334,6 +5373,9 @@
       updateAuthUI();
     } else if (firebaseAuth) {
       firebaseAuth.onAuthStateChanged(async (user) => {
+        if (!window._lastSavedTimer) {
+          window._lastSavedTimer = setInterval(updateLastSavedLabel, 10000);
+        }
         currentUser = user || null;
         updateAuthUI();
         if (currentUser) {
@@ -5341,6 +5383,12 @@
           startAutoSave();
         } else {
           stopAutoSave();
+          lastAutoSaveAt = 0;
+          lastCloudSaveAt = 0;
+          cloudDirty = false;
+          localStorage.removeItem(STORE_KEY);
+          state = structuredClone(defaultState);
+          applyLoadedState();
         }
       });
     }
