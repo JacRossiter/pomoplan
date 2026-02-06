@@ -34,6 +34,8 @@
       --itemPad: 6px 10px;
       --rowPad: 0 12px;
       --dimOpacity: 0.25;
+      --countdownSize: 48px;
+      --countdownLine: 64px;
     }
 
     body.light {
@@ -120,9 +122,10 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      margin-top: 10px;
+      margin-top: 0;
       overflow: hidden;
-      min-height: 140px;
+      min-height: 220px;
+      height: 220px;
     }
 
 
@@ -146,206 +149,123 @@
       color: var(--text);
     }
 
-    .timer-surface,
-    .timer-locked {
-      transition: opacity 200ms var(--ease), transform 200ms var(--ease);
-    }
-
-    .timer-locked {
-      border-radius: 14px;
-      padding: 18px 24px;
-      display: none;
+    .timer-surface {
+      height: 100%;
+      display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 10px;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 20px;
+      border-radius: 14px;
       background:
         radial-gradient(600px 200px at 50% -40%, rgba(255, 255, 255, 0.18), transparent 60%),
         color-mix(in srgb, var(--primary) 16%, var(--card));
       border: 1px solid color-mix(in srgb, var(--primary) 45%, var(--border));
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-      text-align: center;
     }
 
-    .timer-card.is-locked .timer-surface {
-      display: none;
-    }
-
-    .timer-card.is-locked .timer-locked {
-      display: flex;
-    }
-
-    .locked-label {
-      font-size: 10px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: color-mix(in srgb, var(--text) 90%, transparent);
-    }
-
-    .locked-task {
-      font-size: 22px;
-      font-weight: 800;
-      line-height: 1.25;
-      max-width: 520px;
-      text-wrap: balance;
-    }
-
-    .locked-countdown {
-      font-size: 36px;
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      font-variant-numeric: tabular-nums;
-      color: var(--text);
-    }
-
-    .locked-meta {
+    .panel-range {
       font-size: 12px;
       color: var(--muted);
-      margin-top: -2px;
+      text-align: left;
     }
 
-    .locked-elapsed {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .locked-sub {
+    .panel-row {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .locked-actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      margin-top: 6px;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
       width: 100%;
-      justify-content: center;
-      margin-top: auto;
+      min-height: 0;
+      padding: 0 60px;
     }
 
-    .unlock-btn {
+    .panel-time {
+      text-align: left;
+    }
+
+    .panel-time .countdown,
+    .panel-time .timer-display {
+      font-size: var(--countdownSize);
+      line-height: var(--countdownLine);
+      background: transparent;
+      padding: 0;
+      text-align: left;
+      width: auto;
+    }
+
+    .panel-sub {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 6px;
+      text-align: left;
+    }
+
+    .panel-cta {
       border: none;
+      border-radius: 12px;
+      padding: 0 34px;
+      font-weight: 800;
       background: var(--primary);
       color: #fff;
-      border-radius: 999px;
-      padding: 8px 18px;
-      font-weight: 800;
       cursor: pointer;
-      transition: transform 160ms var(--ease), filter 160ms var(--ease);
-    }
-
-    .unlock-btn:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.08);
-    }
-
-    .timer-actions {
-      display: flex;
+      display: inline-flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
-      gap: 6px;
-      margin-top: 10px;
-    }
-
-    .lock-btn {
-      border: none;
-      border-radius: 999px;
-      padding: 10px 22px;
-      font-weight: 800;
-      background: var(--primary);
-      color: #fff;
-      cursor: pointer;
+      width: 260px;
+      height: var(--countdownLine);
+      position: relative;
+      text-align: left;
       transition: transform 160ms var(--ease), filter 160ms var(--ease);
     }
 
-    .lock-btn:hover {
+    .panel-cta:hover {
       transform: translateY(-1px);
       filter: brightness(1.08);
     }
 
-    .lock-btn:disabled {
+    .panel-cta:disabled {
       opacity: 0.5;
       cursor: not-allowed;
       transform: none;
       filter: none;
     }
 
-    .lock-status {
-      font-size: 12px;
-      color: var(--muted);
+    .panel-cta-text {
+      font-size: 24px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      align-self: center;
       text-align: center;
-      max-width: 420px;
-      line-height: 1.3;
+      line-height: 1;
     }
 
-    .lock-chooser {
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--surface);
+    .panel-cta-sub {
+      font-size: 10px;
+      opacity: 0.85;
+      position: absolute;
+      right: 12px;
+      bottom: 8px;
+      text-align: right;
+    }
+
+    .panel-cta:not(.is-locked) .panel-cta-sub {
       display: none;
     }
 
-    .lock-chooser.show {
-      display: block;
-    }
-
-    .lock-chooser-title {
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+    .panel-task {
+      font-size: 12px;
       color: var(--muted);
-      margin-bottom: 6px;
+      text-align: right;
+      align-self: flex-end;
+      padding-bottom: 2px;
     }
 
-    .lock-chooser-input {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .lock-input {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: transparent;
+    .panel-task span {
       color: var(--text);
-      padding: 6px 10px;
-      font-size: 13px;
-      outline: none;
-    }
-
-    .lock-set-btn {
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text);
-      border-radius: 10px;
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .lock-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .lock-pill {
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text);
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 12px;
-      cursor: pointer;
     }
 
     .timer-meta {
@@ -1368,7 +1288,10 @@
     }
 
     .range {
-      width: 100%;
+      width: auto;
+      min-width: 160px;
+      max-width: 320px;
+      padding: 8px 22px;
     }
 
     .pill {
@@ -1678,31 +1601,18 @@
     <div class="col right">
       <div class="card timer-card">
         <div class="timer-surface">
-          <div id="countdown" class="countdown timer-display">--:--</div>
-          <div class="timer-actions">
-            <button id="lockBtn" class="lock-btn" type="button">Lock In</button>
-            <div id="lockStatus" class="lock-status">Not locked</div>
-          </div>
-          <div id="lockChooser" class="lock-chooser" aria-hidden="true">
-            <div class="lock-chooser-title">Pick a task for this block</div>
-            <div class="lock-chooser-input">
-              <input id="lockInput" class="lock-input" type="text" placeholder="Type task..." />
-              <button id="lockSetBtn" class="lock-set-btn" type="button">Set</button>
+          <div id="panelRange" class="panel-range">--:--</div>
+          <div class="panel-row">
+            <div class="panel-time">
+              <div id="countdown" class="countdown timer-display">--:--</div>
+              <div class="panel-sub">Until next task</div>
             </div>
-            <div id="lockTodoPills" class="lock-pills"></div>
+            <button id="lockBtn" class="panel-cta" type="button">
+              <span id="panelCtaText" class="panel-cta-text">Lock In</span>
+              <span id="panelElapsed" class="panel-cta-sub">00:00</span>
+            </button>
           </div>
-        </div>
-        <div class="timer-locked" aria-hidden="true">
-          <div class="locked-label">Locked In</div>
-          <div id="lockedCountdown" class="locked-countdown">--:--</div>
-          <div id="lockedTask" class="locked-task">Focused block</div>
-          <div class="locked-sub">
-            <div id="lockedMeta" class="locked-meta">00:00-00:00</div>
-            <div id="lockedElapsed" class="locked-elapsed">Locked for 00:00</div>
-          </div>
-          <div class="locked-actions">
-            <button id="unlockBtn" class="unlock-btn" type="button">Unlock</button>
-          </div>
+          <div id="panelTask" class="panel-task">Task: <span>—</span></div>
         </div>
       </div>
       <div class="card">
@@ -3825,18 +3735,11 @@ function deleteSlot(dk, t) {
     const timerNowEl = $("#timerNow");
     const timerNextEl = $("#timerNext");
     const lockBtn = $("#lockBtn");
-    const lockStatus = $("#lockStatus");
-    const lockChooser = $("#lockChooser");
-    const lockInput = $("#lockInput");
-    const lockSetBtn = $("#lockSetBtn");
-    const lockTodoPills = $("#lockTodoPills");
-    const unlockBtn = $("#unlockBtn");
     const timerCard = document.querySelector(".timer-card");
-    const lockedTaskEl = $("#lockedTask");
-    const lockedMetaEl = $("#lockedMeta");
-    const lockedCountdownEl = $("#lockedCountdown");
-    const lockedElapsedEl = $("#lockedElapsed");
-    let pendingLockInfo = null;
+    const panelRangeEl = $("#panelRange");
+    const panelTaskEl = $("#panelTask");
+    const panelCtaTextEl = $("#panelCtaText");
+    const panelElapsedEl = $("#panelElapsed");
 
     function blockLabel(info) {
       const endH = Math.floor(info.slotEndMins / 60);
@@ -3850,109 +3753,42 @@ function deleteSlot(dk, t) {
       const rem = secs % 60;
       return `${String(mins).padStart(2, "0")}:${String(rem).padStart(2, "0")}`;
     }
-
-    function closeLockChooser() {
-      if (!lockChooser) return;
-      lockChooser.classList.remove("show");
-      lockChooser.setAttribute("aria-hidden", "true");
-      pendingLockInfo = null;
-      if (lockInput) lockInput.value = "";
-    }
-
-    function openLockChooser(info) {
-      if (!lockChooser) return;
-      pendingLockInfo = info;
-      lockChooser.classList.add("show");
-      lockChooser.setAttribute("aria-hidden", "false");
-      if (lockTodoPills) {
-        lockTodoPills.innerHTML = "";
-        const todos = state.todos.filter((t) => !t.done && t.text && t.text.trim());
-        const top = todos.slice(0, 6);
-        if (!top.length) {
-          const empty = document.createElement("div");
-          empty.className = "lock-status";
-          empty.textContent = "No todos yet.";
-          lockTodoPills.appendChild(empty);
-        } else {
-          top.forEach((todo) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "lock-pill";
-            btn.textContent = todo.text;
-            btn.addEventListener("click", () => setLockTask(todo.text));
-            lockTodoPills.appendChild(btn);
-          });
-        }
-      }
-      setTimeout(() => lockInput?.focus(), 0);
-    }
-
-    function setLockTask(text) {
-      const now = new Date();
-      if (!isSameDay(selected, now)) {
-        showError("Select today to lock in.");
-        closeLockChooser();
-        return;
-      }
-      const info = getCurrentBlockInfo();
-      if (!info || !pendingLockInfo) {
-        closeLockChooser();
-        return;
-      }
-      const dk = dateKey(selected);
-      const trimmed = text.trim();
-      if (!trimmed) {
-        showError("Type a task to lock in.");
-        return;
-      }
-      setSlotText(dk, info.timeKey, trimmed);
-      setBlockLocked(dk, info.timeKey, true);
-      save();
-      renderSchedule();
-      tickCountdown(true);
-      updateLockUI();
-      closeLockChooser();
-    }
-
     function updateLockUI() {
-      if (!lockBtn || !lockStatus) return;
+      if (!lockBtn) return;
       const now = new Date();
       if (!isSameDay(selected, now)) {
         lockBtn.disabled = true;
-        lockStatus.textContent = "Select today to lock in";
-        timerCard?.classList.remove("is-locked");
-        closeLockChooser();
+        panelRangeEl.textContent = "--:--";
+        panelTaskEl.textContent = "Task: —";
+        lockBtn.classList.remove("is-locked");
         return;
       }
       const info = getCurrentBlockInfo();
       if (!info) {
         lockBtn.disabled = true;
-        lockStatus.textContent = "Outside schedule";
-        timerCard?.classList.remove("is-locked");
-        closeLockChooser();
+        panelRangeEl.textContent = "--:--";
+        panelTaskEl.textContent = "Task: —";
+        lockBtn.classList.remove("is-locked");
         return;
       }
       lockBtn.disabled = false;
       const dk = dateKey(selected);
       const label = blockLabel(info);
       const task = getSlotText(dk, info.timeKey).trim();
+      panelRangeEl.textContent = label;
+      panelTaskEl.innerHTML = `Task: <span>${task || "—"}</span>`;
       if (isBlockLocked(dk, info.timeKey)) {
-        lockBtn.textContent = "Unlock";
-        lockStatus.textContent = task ? `Locked: ${label} - ${task}` : `Locked: ${label}`;
-        timerCard?.classList.add("is-locked");
-        if (lockedTaskEl) lockedTaskEl.textContent = task || "Focused block";
-        if (lockedMetaEl) lockedMetaEl.textContent = label;
+        lockBtn.classList.add("is-locked");
+        if (panelCtaTextEl) panelCtaTextEl.textContent = "Locked In";
         const lockInfo = getLockInfo(dk, info.timeKey);
-        if (lockedElapsedEl) {
+        if (panelElapsedEl) {
           const elapsedSecs = lockInfo ? (Date.now() - lockInfo.startedAt) / 1000 : 0;
-          lockedElapsedEl.textContent = `Locked for ${formatDuration(elapsedSecs)}`;
+          panelElapsedEl.textContent = formatDuration(elapsedSecs);
         }
-        closeLockChooser();
       } else {
-        lockBtn.textContent = "Lock In";
-        lockStatus.textContent = task ? `Ready: ${label} - ${task}` : `Ready: ${label}`;
-        timerCard?.classList.remove("is-locked");
-        if (pendingLockInfo && pendingLockInfo.timeKey !== info.timeKey) closeLockChooser();
+        lockBtn.classList.remove("is-locked");
+        if (panelCtaTextEl) panelCtaTextEl.textContent = "Lock In";
+        if (panelElapsedEl) panelElapsedEl.textContent = "";
       }
     }
 
@@ -3975,11 +3811,6 @@ function deleteSlot(dk, t) {
         updateLockUI();
         return;
       }
-      const existingText = getSlotText(dk, info.timeKey).trim();
-      if (!existingText) {
-        openLockChooser(info);
-        return;
-      }
       setBlockLocked(dk, info.timeKey, true);
       save();
       renderSchedule();
@@ -3990,28 +3821,10 @@ function deleteSlot(dk, t) {
       lockBtn.addEventListener("click", handleLockAction);
     }
 
-    if (unlockBtn) {
-      unlockBtn.addEventListener("click", handleLockAction);
-    }
-
-    if (lockSetBtn) {
-      lockSetBtn.addEventListener("click", () => setLockTask(lockInput?.value ?? ""));
-    }
-
-    if (lockInput) {
-      lockInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          setLockTask(lockInput.value);
-        }
-      });
-    }
-
     function tickCountdown(forceTitle = false) {
       const blockInfo = getCurrentBlockInfo();
       if (!blockInfo) {
         countdownEl.textContent = "--:--";
-        if (lockedCountdownEl) lockedCountdownEl.textContent = "--:--";
         if (forceTitle) document.title = "Pomoplan";
         if (timerNowEl) timerNowEl.innerHTML = "Now: <span>?</span>";
         if (timerNextEl) timerNextEl.innerHTML = "Next: <span>?</span>";
@@ -4023,7 +3836,6 @@ function deleteSlot(dk, t) {
       const secs = Math.max(0, blockInfo.remainingSecs % 60);
       const formatted = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
       countdownEl.textContent = formatted;
-      if (lockedCountdownEl) lockedCountdownEl.textContent = formatted;
 
       const dk = dateKey(selected);
       const task = getSlotText(dk, blockInfo.timeKey);
@@ -4046,6 +3858,7 @@ function deleteSlot(dk, t) {
       renderSchedule();
       tickCountdown(true);
       updateNowLine();
+      syncPanelHeights();
       if (welcomePop && shouldShowWelcome()) {
         setTimeout(() => openCenteredPopover(welcomePop), 250);
       }
@@ -4058,6 +3871,20 @@ function deleteSlot(dk, t) {
       updateNowLine();
       checkSoundAlerts();
     }, 1000);
+
+    function syncPanelHeights() {
+      const calCard = document.querySelector(".col.left .card");
+      const tCard = document.querySelector(".timer-card");
+      if (!calCard || !tCard) return;
+      const h = calCard.getBoundingClientRect().height;
+      if (!h) return;
+      tCard.style.height = `${Math.round(h)}px`;
+      tCard.style.minHeight = `${Math.round(h)}px`;
+    }
+
+    window.addEventListener("resize", () => {
+      syncPanelHeights();
+    });
   </script>
 </body>
 </html>
