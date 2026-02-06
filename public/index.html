@@ -184,6 +184,30 @@
 
     }
 
+    .hdr-status {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .auth-status {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.72);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 260px;
+    }
+    .save-status {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.55);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 260px;
+    }
+
 
 
     .app-title {
@@ -854,6 +878,21 @@
 
       color: var(--text);
 
+    }
+
+    .hdr-actions .pill-btn {
+      width: auto;
+      height: 32px;
+      border-radius: 999px;
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .hdr-actions .pill-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
 
@@ -2986,6 +3025,12 @@
 
     }
 
+    #errorToast.success {
+      background: #1f5b2e;
+      border-color: #2d7a41;
+      color: #e7ffef;
+    }
+
 
 
     #errorToast.show {
@@ -3609,11 +3654,21 @@
     <div class="hdr-left">
 
       <div class="app-title">Pomoplan</div>
+      <div class="hdr-status">
+        <div id="authStatus" class="auth-status">Offline mode</div>
+        <div id="saveStatus" class="save-status">Autosave: idle</div>
+      </div>
 
     </div>
 
     <div class="hdr-actions">
 
+      <button id="cloudSaveBtn" class="btn pill-btn" type="button" title="Save to cloud" aria-label="Save to cloud">
+        Save
+      </button>
+      <button id="authBtn" class="btn pill-btn" type="button" title="Sign in" aria-label="Sign in">
+        Sign in
+      </button>
       <button id="themeBtn" class="btn" title="Theme" aria-label="Theme">
 
         <span class="icon">🎨</span>
@@ -4160,6 +4215,9 @@
     </div>
 
   </div>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
 
@@ -4498,6 +4556,18 @@
     const STORE_KEY = "dailyScheduler_v5";
 
     const WELCOME_KEY = "dailyScheduler_seenWelcome_v1";
+    const CLOUD_SAVE_COOLDOWN_MS = 60 * 1000;
+
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyBcR5nReCb3upCbeOsqV0w8UVtp2rbbXmo",
+      authDomain: "pomoplan-9043b.firebaseapp.com",
+      projectId: "pomoplan-9043b",
+      storageBucket: "pomoplan-9043b.firebasestorage.app",
+      messagingSenderId: "120676340778",
+      appId: "1:120676340778:web:3c9e26bf6c8d54ab231f53",
+      measurementId: "G-JN491LWFJM"
+    };
+    const FIREBASE_PLACEHOLDER = "YOUR_API_KEY";
 
     const defaultState = {
 
@@ -4786,6 +4856,8 @@
 
 
 
+    let cloudDirty = false;
+
     normalizeState();
 
     START_H = state.settings.dayStart ?? 7;
@@ -4803,9 +4875,244 @@
     function save() {
 
       localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      cloudDirty = true;
 
     }
 
+    const CLOUD_DEVICE_KEY = "dailyScheduler_device_v1";
+    let firebaseApp = null;
+    let firebaseAuth = null;
+    let firestore = null;
+    let currentUser = null;
+    let lastCloudSaveAt = 0;
+    let cloudCooldownTimer = null;
+    let lastAutoSaveAt = 0;
+    let autoSaveTimer = null;
+
+    function isFirebaseConfigured() {
+      return !!(window.firebase && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== FIREBASE_PLACEHOLDER);
+    }
+
+    function initFirebase() {
+      if (!isFirebaseConfigured()) return false;
+      firebaseApp = firebase.apps?.length ? firebase.app() : firebase.initializeApp(FIREBASE_CONFIG);
+      firebaseAuth = firebase.auth();
+      firestore = firebase.firestore();
+      return true;
+    }
+
+    function getDeviceId() {
+      let id = localStorage.getItem(CLOUD_DEVICE_KEY);
+      if (!id) {
+        id = `device_${Date.now()}_${Math.random().toString(16).slice(2, 10)}`;
+        localStorage.setItem(CLOUD_DEVICE_KEY, id);
+      }
+      return id;
+    }
+
+    function estimateSizeBytes(obj) {
+      try {
+        return new Blob([JSON.stringify(obj)]).size;
+      } catch {
+        return null;
+      }
+    }
+
+    function updateCloudSaveButton() {
+      if (!cloudSaveBtn) return;
+      if (!currentUser) {
+        cloudSaveBtn.disabled = true;
+        cloudSaveBtn.textContent = "Save";
+        cloudSaveBtn.title = "Sign in to save to cloud";
+        return;
+      }
+      const elapsed = Date.now() - lastCloudSaveAt;
+      const remaining = Math.max(0, CLOUD_SAVE_COOLDOWN_MS - elapsed);
+      if (remaining > 0) {
+        cloudSaveBtn.disabled = true;
+        cloudSaveBtn.textContent = `Save (${Math.ceil(remaining / 1000)}s)`;
+        cloudSaveBtn.title = "Cooldown active";
+        if (!cloudCooldownTimer) {
+          cloudCooldownTimer = setInterval(updateCloudSaveButton, 1000);
+        }
+      } else {
+        cloudSaveBtn.disabled = false;
+        cloudSaveBtn.textContent = "Save";
+        cloudSaveBtn.title = "Save to cloud";
+        if (cloudCooldownTimer) {
+          clearInterval(cloudCooldownTimer);
+          cloudCooldownTimer = null;
+        }
+      }
+    }
+
+    function updateAuthUI() {
+      if (!authStatus || !authBtn) return;
+      if (!isFirebaseConfigured()) {
+        authStatus.textContent = "Cloud sync not configured";
+        authBtn.textContent = "No cloud";
+        authBtn.disabled = true;
+        if (cloudSaveBtn) cloudSaveBtn.disabled = true;
+        if (saveStatus) saveStatus.textContent = "Autosave: unavailable";
+        return;
+      }
+      if (!currentUser) {
+        authStatus.textContent = "Not signed in";
+        authBtn.textContent = "Sign in";
+        authBtn.title = "Sign in with Google";
+        if (saveStatus) saveStatus.textContent = "Autosave: signed out";
+      } else {
+        const name = currentUser.displayName || currentUser.email || "Google user";
+        authStatus.textContent = `Signed in as ${name}`;
+        authBtn.textContent = "Sign out";
+        authBtn.title = "Sign out";
+        if (saveStatus) saveStatus.textContent = "Autosave: waiting";
+      }
+      updateCloudSaveButton();
+    }
+
+    function formatTimeAgo(ts) {
+      if (!ts) return "never";
+      const diff = Date.now() - ts;
+      if (diff < 5000) return "just now";
+      if (diff < 60000) return `${Math.max(1, Math.round(diff / 1000))}s ago`;
+      if (diff < 3600000) return `${Math.round(diff / 60000)}m ago`;
+      return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function applyLoadedState() {
+      normalizeState();
+      START_H = state.settings.dayStart ?? 7;
+      END_H = state.settings.dayEnd ?? 22;
+      SLOT_MIN = state.settings.slotMinutes ?? 30;
+      TIMES = allTimes(SLOT_MIN);
+      applyTheme();
+      syncScheduleUI();
+      renderCalendar();
+      renderTodos();
+      renderSchedule();
+      renderLockHistory();
+      updateLockUI();
+      updateNowLine();
+      tickCountdown(true);
+      save();
+    }
+
+    async function loadLatestCloudState() {
+      if (!firestore || !currentUser) return;
+      try {
+        const snap = await firestore
+          .collection("users")
+          .doc(currentUser.uid)
+          .collection("history")
+          .orderBy("createdAt", "desc")
+          .limit(1)
+          .get();
+        if (snap.empty) return;
+        const data = snap.docs[0].data();
+        if (!data?.state) return;
+        const cloudState = data.state;
+        const localSnapshot = JSON.stringify(state);
+        const cloudSnapshot = JSON.stringify(cloudState);
+        if (localSnapshot !== cloudSnapshot) {
+          const confirmLoad = window.confirm("Load your latest cloud save and replace local data?");
+          if (!confirmLoad) return;
+        }
+        state = cloudState;
+        applyLoadedState();
+      } catch (err) {
+        showError("Couldn't load cloud data.");
+        console.error(err);
+      }
+    }
+
+    function startAutoSave() {
+      if (autoSaveTimer) return;
+      autoSaveTimer = setInterval(() => {
+        saveCloudSnapshot({ bypassCooldown: true, reason: "auto" });
+      }, CLOUD_SAVE_COOLDOWN_MS);
+    }
+
+    function stopAutoSave() {
+      if (!autoSaveTimer) return;
+      clearInterval(autoSaveTimer);
+      autoSaveTimer = null;
+    }
+
+    function shouldAutoSave() {
+      if (!cloudDirty) return false;
+      const elapsed = Date.now() - lastAutoSaveAt;
+      return elapsed >= CLOUD_SAVE_COOLDOWN_MS;
+    }
+
+    async function saveCloudSnapshot(options = {}) {
+      if (!firestore || !currentUser) {
+        showError("Sign in to save to cloud.");
+        return;
+      }
+      const bypassCooldown = !!options.bypassCooldown;
+      if (bypassCooldown && !shouldAutoSave()) {
+        return;
+      }
+      if (!bypassCooldown) {
+        const elapsed = Date.now() - lastCloudSaveAt;
+        if (elapsed < CLOUD_SAVE_COOLDOWN_MS) {
+          updateCloudSaveButton();
+          return;
+        }
+      }
+      if (!bypassCooldown && cloudSaveBtn) {
+        cloudSaveBtn.disabled = true;
+        cloudSaveBtn.textContent = "Saving...";
+      }
+      const snapshot = JSON.parse(JSON.stringify(state));
+      const sizeBytes = estimateSizeBytes(snapshot);
+      if (sizeBytes && sizeBytes > 900000) {
+        showError("Save too large for a single cloud document.");
+        return;
+      }
+      try {
+        await firestore
+          .collection("users")
+          .doc(currentUser.uid)
+          .collection("history")
+          .add({
+            state: snapshot,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            createdAtMs: Date.now(),
+            deviceId: getDeviceId()
+          });        if (bypassCooldown) {
+          lastAutoSaveAt = Date.now();
+          if (saveStatus) saveStatus.textContent = `Autosave: ${formatTimeAgo(lastAutoSaveAt)}`;
+        } else {
+          lastCloudSaveAt = Date.now();
+          updateCloudSaveButton();
+          if (saveStatus) saveStatus.textContent = `Saved: ${formatTimeAgo(lastCloudSaveAt)}`;
+          showToast("Saved to cloud", "success");
+        }
+        cloudDirty = false;
+      } catch (err) {
+        showError("Cloud save failed.");
+        if (!bypassCooldown) updateCloudSaveButton();
+        console.error(err);
+      }
+    }
+
+    async function handleAuthClick() {
+      if (!firebaseAuth) return;
+      try {
+        if (currentUser) {
+          await firebaseAuth.signOut();
+        } else {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: "select_account" });
+          await firebaseAuth.signInWithPopup(provider);
+        }
+      } catch (err) {
+        showError("Sign in failed.");
+        console.error(err);
+      }
+    }
 
 
     function ensureSchedule(dk) {
@@ -4983,6 +5290,10 @@
     const settingsPop = $("#settingsPop");
 
     const welcomePop = $("#welcomePop");
+    const authStatus = $("#authStatus");
+    const authBtn = $("#authBtn");
+    const cloudSaveBtn = $("#cloudSaveBtn");
+    const saveStatus = $("#saveStatus");
 
     const undoBtn = $("#undoBtn");
 
@@ -5016,6 +5327,23 @@
     const deletedStack = [];
 
     let pendingFocusId = null;
+    const firebaseReady = initFirebase();
+    if (authBtn) authBtn.addEventListener("click", handleAuthClick);
+    if (cloudSaveBtn) cloudSaveBtn.addEventListener("click", saveCloudSnapshot);
+    if (!firebaseReady) {
+      updateAuthUI();
+    } else if (firebaseAuth) {
+      firebaseAuth.onAuthStateChanged(async (user) => {
+        currentUser = user || null;
+        updateAuthUI();
+        if (currentUser) {
+          await loadLatestCloudState();
+          startAutoSave();
+        } else {
+          stopAutoSave();
+        }
+      });
+    }
 
 
 
@@ -5119,20 +5447,18 @@
 
 
 
-    function showError(msg) {
-
+    function showToast(msg, variant = "error") {
       const toast = $("#errorToast");
-
       if (!toast) return;
-
       toast.textContent = msg;
-
+      toast.classList.toggle("success", variant === "success");
       toast.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toast.classList.remove("show"), 2200);
+    }
 
-      clearTimeout(showError._t);
-
-      showError._t = setTimeout(() => toast.classList.remove("show"), 2200);
-
+    function showError(msg) {
+      showToast(msg, "error");
     }
 
 
