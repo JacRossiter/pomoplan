@@ -2672,20 +2672,30 @@
       --lh-gap: 10px;
     }
 
-    .lock-history-summary {
+    .lock-history-panel {
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      background: transparent;
+      margin-top: 6px;
       display: grid;
-      gap: 4px;
-      font-size: 12px;
-      color: var(--muted);
+      gap: 8px;
+    }
+
+    .lock-history-header {
       padding: 0 var(--lh-pad);
     }
 
-    .lock-history-summary-text {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
+    .lock-history-date {
+      width: 100%;
+    }
+
+    .lock-history-summary {
+      padding: 0 var(--lh-pad);
       color: var(--muted);
-      padding-left: 2px;
+      font-size: 12px;
+      display: grid;
+      gap: 4px;
     }
 
     .lock-history-summary-bar {
@@ -2704,26 +2714,12 @@
     }
 
     .lock-history-summary-labels {
-      display: grid;
-      grid-template-columns: 1fr auto;
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      column-gap: 10px;
       font-size: 11px;
       color: var(--text);
-      margin-top: 4px;
-      width: 100%;
-      padding-right: 28px;
     }
-
-    .lock-history-goal-cell {
-      grid-column: 2 / 3;
-      justify-self: end;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    
 
     .lock-history-goal-link {
       display: inline-flex;
@@ -2760,55 +2756,6 @@
       opacity: 1;
     }
 
-    .lock-history-divider {
-      height: 1px;
-      background: var(--border);
-      margin-top: 6px;
-    }
-
-    .lock-history-panel {
-      border: none;
-      border-radius: 0;
-      padding: 0;
-      background: transparent;
-      margin-top: 6px;
-      display: grid;
-      gap: 8px;
-    }
-
-    .lock-history-header {
-      display: grid;
-      grid-template-columns: 1fr;
-      align-items: center;
-      gap: 10px;
-      padding: 0 var(--lh-pad);
-    }
-
-    .lock-history-field {
-      display: grid;
-      gap: 6px;
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .lock-history-field input {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 6px 8px;
-      background: transparent;
-      color: var(--text);
-      width: 100%;
-    }
-
-    .lock-history-field input:focus {
-      outline: none;
-      border-color: var(--focus);
-    }
-
-    .lock-history-goal-input {
-      display: none;
-    }
-
     .lock-history-goal-input-inline {
       display: none;
       width: 86px;
@@ -2821,14 +2768,36 @@
       text-align: right;
     }
 
-    .lock-history-panel.is-editing .lock-history-goal-link {
+    .lock-history-summary.is-editing .lock-history-goal-link {
       display: none;
     }
 
-    .lock-history-panel.is-editing .lock-history-goal-input-inline {
+    .lock-history-summary.is-editing .lock-history-goal-input-inline {
       display: inline-flex;
     }
 
+    .lock-history-field {
+      display: grid;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .lock-history-input,
+    .lock-history-field input {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      background: transparent;
+      color: var(--text);
+      width: 100%;
+    }
+
+    .lock-history-input:focus,
+    .lock-history-field input:focus {
+      outline: none;
+      border-color: var(--focus);
+    }
 
     .lock-history-body {
       display: grid;
@@ -4050,9 +4019,9 @@
     <div class="pop-title">Time locked in</div>
     <div class="lock-history-panel" id="lockHistoryPanel">
       <div class="lock-history-header">
-        <label class="lock-history-field lock-history-field-day">
-          <input id="lockHistoryDate" type="date" />
-        </label>
+        <div class="lock-history-date">
+          <input id="lockHistoryDate" class="lock-history-input" type="date" />
+        </div>
       </div>
       <div id="lockHistorySummary" class="lock-history-summary"></div>
     </div>
@@ -8194,13 +8163,11 @@ function deleteSlot(dk, t) {
           </div>
           <div class="lock-history-summary-labels">
             <span>${formatDurationShort(daySeconds)}</span>
-            <div class="lock-history-goal-cell">
-              <button class="lock-history-goal-link" type="button">
-                <span>Goal:</span>
-                <span>${formatDurationShort(goalSecs)}</span>
-              </button>
-              <input id="lockHistoryGoalInline" class="lock-history-goal-input-inline" type="number" min="10" step="5" />
-            </div>
+            <button class="lock-history-goal-link" type="button">
+              <span>Goal:</span>
+              <span>${formatDurationShort(goalSecs)}</span>
+            </button>
+            <input id="lockHistoryGoalInline" class="lock-history-goal-input-inline" type="number" min="10" step="5" />
           </div>
         `;
         const goalInline = lockHistorySummary.querySelector("#lockHistoryGoalInline");
@@ -8213,7 +8180,7 @@ function deleteSlot(dk, t) {
             save();
             syncScheduleUI();
             renderLockHistory();
-            if (lockHistoryPanel) lockHistoryPanel.classList.remove("is-editing");
+            lockHistorySummary.classList.remove("is-editing");
           });
         }
       }
@@ -8459,7 +8426,7 @@ function deleteSlot(dk, t) {
     if (lockHistoryBtn && lockHistoryPop) {
       lockHistoryBtn.addEventListener("click", () => {
         if (lockHistoryDate) lockHistoryDate.value = toDateInputValue(selected);
-        if (lockHistoryPanel) lockHistoryPanel.classList.remove("is-editing");
+        if (lockHistorySummary) lockHistorySummary.classList.remove("is-editing");
         renderLockHistory();
         openCenteredPopover(lockHistoryPop);
       });
@@ -8473,12 +8440,12 @@ function deleteSlot(dk, t) {
       });
     }
 
-    if (lockHistoryPanel) {
-      lockHistoryPanel.addEventListener("click", (e) => {
+    if (lockHistorySummary) {
+      lockHistorySummary.addEventListener("click", (e) => {
         const target = e.target;
         if (!(target instanceof Element)) return;
         if (!target.closest(".lock-history-goal-link")) return;
-        lockHistoryPanel.classList.add("is-editing");
+        lockHistorySummary.classList.add("is-editing");
         const goalInline = lockHistorySummary ? lockHistorySummary.querySelector("#lockHistoryGoalInline") : null;
         if (goalInline) {
           goalInline.focus();
