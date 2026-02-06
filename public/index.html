@@ -9,6 +9,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
   <title>Pomoplan</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="/favicon-plain.svg" sizes="any" />
 
   <style>
 
@@ -3784,7 +3786,7 @@
 
                 <div id="countdown" class="lockin-time timer-display">--:--</div>
 
-                <div class="lockin-sub">Until next task</div>
+                <div id="lockinSub" class="lockin-sub">Until next task</div>
 
               </div>
 
@@ -5352,6 +5354,7 @@
     const lockHistorySummary = $("#lockHistorySummary");
     const lockHistoryDate = $("#lockHistoryDate");
     const lockHistoryPanel = $("#lockHistoryPanel");
+    const lockinSubEl = $("#lockinSub");
 
     const themeDarkBtn = $("#themeDark");
 
@@ -8697,16 +8700,30 @@ function deleteSlot(dk, t) {
       if (!isSameDay(selected, now)) {
         lockBtn.disabled = true;
         panelRangeEl.textContent = "--:--";
-        panelTaskEl.textContent = "Task: —";
+        panelTaskEl.textContent = "Task: ???";
+        if (panelCtaTextEl) panelCtaTextEl.textContent = "Lock In";
+        if (panelElapsedEl) panelElapsedEl.textContent = "";
+      if (lockinSubEl) lockinSubEl.textContent = "Until next task";
+        if (lockinSubEl) lockinSubEl.textContent = "Select today to lock in";
         lockBtn.classList.remove("is-locked");
         if (lockinPanel) lockinPanel.classList.remove("is-locked");
         return;
       }
       const info = getCurrentBlockInfo();
       if (!info) {
+        const mins = now.getHours() * 60 + now.getMinutes();
+        const startM = START_H * 60;
+        const endM = END_H * 60;
+        const status =
+          mins < startM
+            ? `Day hasn't started yet (starts ${timeString(START_H, 0)})`
+            : `Day is over (ended ${timeString(END_H, 0)})`;
         lockBtn.disabled = true;
         panelRangeEl.textContent = "--:--";
-        panelTaskEl.textContent = "Task: —";
+        panelTaskEl.textContent = "Task: ???";
+        if (panelCtaTextEl) panelCtaTextEl.textContent = "Chill out";
+        if (panelElapsedEl) panelElapsedEl.textContent = "";
+        if (lockinSubEl) lockinSubEl.textContent = status;
         lockBtn.classList.remove("is-locked");
         if (lockinPanel) lockinPanel.classList.remove("is-locked");
         return;
