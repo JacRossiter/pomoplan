@@ -542,6 +542,32 @@
 
     }
 
+    .lockin-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .lockin-history-btn {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: color 160ms var(--ease), border-color 160ms var(--ease), background 160ms var(--ease);
+    }
+
+    .lockin-history-btn:hover {
+      color: var(--text);
+      border-color: color-mix(in srgb, var(--border) 70%, white 30%);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
 
 
     .lockin-row {
@@ -2639,6 +2665,324 @@
 
     }
 
+    .lock-history-pop {
+      width: 420px;
+      --lh-pad: 10px;
+      --lh-icon: 18px;
+      --lh-gap: 10px;
+    }
+
+    .lock-history-summary {
+      display: grid;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 var(--lh-pad);
+    }
+
+    .lock-history-summary-text {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      padding-left: 2px;
+    }
+
+    .lock-history-summary-bar {
+      position: relative;
+      height: 10px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--border) 70%, transparent);
+      overflow: hidden;
+    }
+
+    .lock-history-summary-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      transition: width 200ms var(--ease);
+    }
+
+    .lock-history-summary-labels {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      column-gap: 10px;
+      font-size: 11px;
+      color: var(--text);
+      margin-top: 4px;
+      width: 100%;
+      padding-right: 28px;
+    }
+
+    .lock-history-goal-cell {
+      grid-column: 2 / 3;
+      justify-self: end;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    
+
+    .lock-history-goal-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 11px;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .lock-history-goal-link span:first-child {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 10px;
+    }
+
+    .lock-history-goal-link::after {
+      content: "";
+      width: 12px;
+      height: 12px;
+      margin-left: 4px;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 20h9'/><path d='M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 12px 12px;
+      opacity: 0.6;
+    }
+
+    .lock-history-goal-link:hover::after {
+      opacity: 1;
+    }
+
+    .lock-history-divider {
+      height: 1px;
+      background: var(--border);
+      margin-top: 6px;
+    }
+
+    .lock-history-panel {
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      background: transparent;
+      margin-top: 6px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .lock-history-header {
+      display: grid;
+      grid-template-columns: 1fr;
+      align-items: center;
+      gap: 10px;
+      padding: 0 var(--lh-pad);
+    }
+
+    .lock-history-field {
+      display: grid;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .lock-history-field input {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      background: transparent;
+      color: var(--text);
+      width: 100%;
+    }
+
+    .lock-history-field input:focus {
+      outline: none;
+      border-color: var(--focus);
+    }
+
+    .lock-history-goal-input {
+      display: none;
+    }
+
+    .lock-history-goal-input-inline {
+      display: none;
+      width: 86px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px 6px;
+      background: transparent;
+      color: var(--text);
+      font-size: 11px;
+      text-align: right;
+    }
+
+    .lock-history-panel.is-editing .lock-history-goal-link {
+      display: none;
+    }
+
+    .lock-history-panel.is-editing .lock-history-goal-input-inline {
+      display: inline-flex;
+    }
+
+
+    .lock-history-body {
+      display: grid;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .lock-history-empty {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .lock-history-list {
+      display: grid;
+      gap: 10px;
+      max-height: 320px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .lock-history-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px var(--lh-pad);
+      background: var(--surface);
+      display: grid;
+      gap: 6px;
+    }
+
+    .lock-history-compact {
+      display: grid;
+      grid-template-columns: 1fr auto var(--lh-icon) var(--lh-icon);
+      column-gap: var(--lh-gap);
+      row-gap: 4px;
+      align-items: center;
+    }
+
+    .lock-history-main {
+      display: grid;
+      gap: 2px;
+      font-size: 12px;
+    }
+
+    .lock-history-time {
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .lock-history-task {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .lock-history-meta {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .lock-history-edit {
+      display: none;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      gap: 6px;
+    }
+
+    .lock-history-item.is-editing .lock-history-edit {
+      display: grid;
+    }
+
+    .lock-history-delete {
+      justify-self: end;
+    }
+
+    .lock-history-delete.mini-btn {
+      padding: 2px 8px;
+      font-size: 10px;
+    }
+
+    .lock-history-row {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 6px;
+      align-items: center;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .lock-history-row input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .lock-history-row input:focus {
+      outline: none;
+      border-color: var(--focus);
+    }
+
+    .lock-history-actions {
+      margin-top: 8px;
+      justify-content: flex-end;
+    }
+
+    .lock-history-btn {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .lock-history-edit-icon {
+      width: 18px;
+      height: 18px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      opacity: 0.8;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 20h9'/><path d='M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 12px 12px;
+    }
+
+    .lock-history-edit-icon:hover {
+      opacity: 1;
+    }
+
+    .lock-history-delete-icon {
+      width: 18px;
+      height: 18px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      opacity: 0.8;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 5 6 21 6'/><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/><path d='M10 11v6'/><path d='M14 11v6'/><path d='M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2'/></svg>");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 12px 12px;
+    }
+
+    .lock-history-delete-icon:hover {
+      opacity: 1;
+    }
+
 
 
     #errorToast {
@@ -3405,8 +3749,10 @@
         <div class="timer-surface">
 
           <div class="lockin-panel">
-
-            <div id="panelRange" class="lockin-range">--:--</div>
+            <div class="lockin-top">
+              <div id="panelRange" class="lockin-range">--:--</div>
+              <button id="lockHistoryBtn" class="lockin-history-btn" type="button">History</button>
+            </div>
 
             <div class="lockin-row">
 
@@ -3691,6 +4037,29 @@
 
     </div>
 
+    <div class="divider"></div>
+
+    <div class="row2">
+      <div class="label">Daily focus goal (mins)</div>
+      <input id="focusGoal" class="time-select" type="number" min="10" step="5" />
+    </div>
+
+  </div>
+
+  <div id="lockHistoryPop" class="popover lock-history-pop" role="dialog" aria-label="Time locked in">
+    <div class="pop-title">Time locked in</div>
+    <div class="lock-history-panel" id="lockHistoryPanel">
+      <div class="lock-history-header">
+        <label class="lock-history-field lock-history-field-day">
+          <input id="lockHistoryDate" type="date" />
+        </label>
+      </div>
+      <div id="lockHistorySummary" class="lock-history-summary"></div>
+    </div>
+    <div class="lock-history-body">
+      <div class="lock-history-empty">No lock sessions yet.</div>
+      <div id="lockHistoryList" class="lock-history-list"></div>
+    </div>
   </div>
 
   <div id="helpPop" class="popover help-pop" role="dialog" aria-label="Help">
@@ -4177,6 +4546,8 @@
 
         dimScheduleOnlyWhenChild: true,
 
+        focusTargetMins: 120,
+
         slotMinutes: 30,
 
         dayStart: 7,
@@ -4196,6 +4567,10 @@
       },
 
       blockLocks: {},
+
+      activeLock: null,
+
+      lockHistory: [],
 
       todos: [],
 
@@ -4388,6 +4763,7 @@
       state.settings.dimOpacity = state.settings.dimOpacity ?? baseSettings.dimOpacity;
 
       state.settings.dimScheduleOnlyWhenChild = state.settings.dimScheduleOnlyWhenChild ?? baseSettings.dimScheduleOnlyWhenChild;
+      state.settings.focusTargetMins = state.settings.focusTargetMins ?? baseSettings.focusTargetMins;
 
       if (!state.blockLocks || typeof state.blockLocks !== "object") state.blockLocks = {};
 
@@ -4404,6 +4780,10 @@
         }
 
       });
+
+      if (!state.activeLock || typeof state.activeLock !== "object") state.activeLock = null;
+      if (state.activeLock && typeof state.activeLock.startedAt !== "number") state.activeLock = null;
+      if (!Array.isArray(state.lockHistory)) state.lockHistory = [];
 
       state.todos = Array.isArray(state.todos) ? state.todos.map(normalizeTodo).filter(Boolean) : [];
 
@@ -4646,6 +5026,13 @@
     const startTimeSel = $("#startTime");
 
     const endTimeSel = $("#endTime");
+    const focusGoalInput = $("#focusGoal");
+    const lockHistoryBtn = $("#lockHistoryBtn");
+    const lockHistoryPop = $("#lockHistoryPop");
+    const lockHistoryList = $("#lockHistoryList");
+    const lockHistorySummary = $("#lockHistorySummary");
+    const lockHistoryDate = $("#lockHistoryDate");
+    const lockHistoryPanel = $("#lockHistoryPanel");
 
     const themeDarkBtn = $("#themeDark");
 
@@ -4974,6 +5361,7 @@
       helpPop.style.display = "none";
 
       settingsPop.style.display = "none";
+      if (lockHistoryPop) lockHistoryPop.style.display = "none";
 
       welcomePop.style.display = "none";
 
@@ -5472,6 +5860,9 @@
         endTimeSel.value = String(state.settings.dayEnd ?? 22);
 
       }
+      if (focusGoalInput) {
+        focusGoalInput.value = String(state.settings.focusTargetMins ?? 120);
+      }
 
     }
 
@@ -5731,6 +6122,18 @@
 
     }
 
+    if (focusGoalInput) {
+      focusGoalInput.addEventListener("change", () => {
+        const next = Number(focusGoalInput.value);
+        if (Number.isNaN(next) || next <= 0) return;
+        state.settings.focusTargetMins = next;
+        save();
+        syncScheduleUI();
+        renderLockHistory();
+      });
+    }
+
+
 
 
     const previewWarnBtn = $("#previewWarn");
@@ -5772,6 +6175,19 @@
     let viewMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
     let selected = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    function setSelectedDate(nextDate) {
+      if (!nextDate) return;
+      selected = new Date(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate());
+      viewMonth = new Date(selected.getFullYear(), selected.getMonth(), 1);
+      renderCalendar();
+      renderSchedule();
+      tickCountdown(true);
+      updateNowLine();
+      updateLockUI();
+      renderLockHistory();
+      if (lockHistoryDate) lockHistoryDate.value = toDateInputValue(selected);
+    }
 
 
 
@@ -5844,17 +6260,7 @@
 
 
         cell.addEventListener("click", () => {
-
-          selected = d;
-
-          renderCalendar();
-
-          renderSchedule();
-
-          tickCountdown(true);
-
-          updateNowLine();
-
+          setSelectedDate(d);
         });
 
 
@@ -7710,9 +8116,240 @@ function deleteSlot(dk, t) {
 
     }
 
+    function formatLockStart(lock) {
+      if (!lock || typeof lock.startedAt !== "number") return "--:--";
+      const started = new Date(lock.startedAt);
+      const time = started.toTimeString().slice(0, 5);
+      const now = new Date();
+      if (!isSameDay(started, now)) {
+        const dateLabel = started.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+        return `Locked since ${dateLabel} ${time}`;
+      }
+      return `Locked since ${time}`;
+    }
+
+    function toDateInputValue(d) {
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    function fromDateInputValue(value) {
+      if (!value) return null;
+      const d = new Date(value);
+      const ms = d.getTime();
+      if (Number.isNaN(ms)) return null;
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    function formatDurationShort(totalSeconds) {
+      const secs = Math.max(0, Math.floor(totalSeconds));
+      const mins = Math.floor(secs / 60);
+      const hrs = Math.floor(mins / 60);
+      const remMins = mins % 60;
+      if (hrs > 0) return `${hrs}h ${String(remMins).padStart(2, "0")}m`;
+      return `${mins}m`;
+    }
+
+    function toLocalInputValue(ms) {
+      const d = new Date(ms);
+      if (Number.isNaN(d.getTime())) return "";
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function fromLocalInputValue(value) {
+      if (!value) return null;
+      const d = new Date(value);
+      const ms = d.getTime();
+      if (Number.isNaN(ms)) return null;
+      return ms;
+    }
+
+    function renderLockHistory() {
+      if (!lockHistoryList) return;
+      const entries = Array.isArray(state.lockHistory) ? state.lockHistory : [];
+      const activeDay = selected ? new Date(selected.getFullYear(), selected.getMonth(), selected.getDate()) : new Date();
+      const activeKey = dateKey(activeDay);
+      const dayEntries = entries.filter((entry) => {
+        const key = entry.dateKey || dateKey(new Date(entry.startedAt || 0));
+        return key === activeKey;
+      });
+      const emptyEl = document.querySelector(".lock-history-empty");
+      if (lockHistorySummary) {
+        let daySeconds = 0;
+        dayEntries.forEach((entry) => {
+          const start = entry.startedAt || 0;
+          const end = entry.endedAt || Date.now();
+          daySeconds += Math.max(0, (end - start) / 1000);
+        });
+        if (state.activeLock && state.activeLock.startedAt && state.activeLock.dateKey === activeKey) {
+          daySeconds += Math.max(0, (Date.now() - state.activeLock.startedAt) / 1000);
+        }
+        const goalMins = Number(state.settings.focusTargetMins ?? 120);
+        const goalSecs = Math.max(0, goalMins * 60);
+        const pct = goalSecs > 0 ? Math.min(100, Math.round((daySeconds / goalSecs) * 100)) : 0;
+        lockHistorySummary.innerHTML = `
+          <div class="lock-history-summary-bar">
+            <div class="lock-history-summary-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="lock-history-summary-labels">
+            <span>${formatDurationShort(daySeconds)}</span>
+            <div class="lock-history-goal-cell">
+              <button class="lock-history-goal-link" type="button">
+                <span>Goal:</span>
+                <span>${formatDurationShort(goalSecs)}</span>
+              </button>
+              <input id="lockHistoryGoalInline" class="lock-history-goal-input-inline" type="number" min="10" step="5" />
+            </div>
+          </div>
+        `;
+        const goalInline = lockHistorySummary.querySelector("#lockHistoryGoalInline");
+        if (goalInline) {
+          goalInline.value = String(state.settings.focusTargetMins ?? 120);
+          goalInline.addEventListener("change", () => {
+            const next = Number(goalInline.value);
+            if (Number.isNaN(next) || next <= 0) return;
+            state.settings.focusTargetMins = next;
+            save();
+            syncScheduleUI();
+            renderLockHistory();
+            if (lockHistoryPanel) lockHistoryPanel.classList.remove("is-editing");
+          });
+        }
+      }
+      lockHistoryList.innerHTML = "";
+      if (emptyEl) emptyEl.style.display = dayEntries.length ? "none" : "block";
+      if (!dayEntries.length) return;
+
+      dayEntries.forEach((entry) => {
+        const item = document.createElement("div");
+        item.className = "lock-history-item";
+
+        const compact = document.createElement("div");
+        compact.className = "lock-history-compact";
+
+        const main = document.createElement("div");
+        main.className = "lock-history-main";
+        const startTime = new Date(entry.startedAt || 0).toTimeString().slice(0, 5);
+        const endTime = new Date(entry.endedAt || entry.startedAt || 0).toTimeString().slice(0, 5);
+        const durationSecs = Math.max(0, ((entry.endedAt || entry.startedAt || 0) - (entry.startedAt || 0)) / 1000);
+        const timeEl = document.createElement("div");
+        timeEl.className = "lock-history-time";
+        timeEl.textContent = `${startTime}–${endTime}`;
+        const taskEl = document.createElement("div");
+        taskEl.className = "lock-history-task";
+        taskEl.textContent = entry.task ? entry.task : "No task";
+        main.append(timeEl, taskEl);
+
+        const meta = document.createElement("div");
+        meta.className = "lock-history-meta";
+        meta.textContent = formatDurationShort(durationSecs);
+
+        const editBtn = document.createElement("button");
+        editBtn.className = "lock-history-edit-icon";
+        editBtn.type = "button";
+        editBtn.setAttribute("aria-label", "Edit entry");
+        editBtn.addEventListener("click", () => {
+          item.classList.toggle("is-editing");
+        });
+
+        const quickDeleteBtn = document.createElement("button");
+        quickDeleteBtn.className = "lock-history-delete-icon";
+        quickDeleteBtn.type = "button";
+        quickDeleteBtn.setAttribute("aria-label", "Delete entry");
+        quickDeleteBtn.addEventListener("click", () => {
+          state.lockHistory = state.lockHistory.filter((e) => e.id !== entry.id);
+          save();
+          renderLockHistory();
+        });
+
+        compact.append(main, meta, editBtn, quickDeleteBtn);
+
+        const edit = document.createElement("div");
+        edit.className = "lock-history-edit";
+
+        const startRow = document.createElement("div");
+        startRow.className = "lock-history-row";
+        const startLabel = document.createElement("div");
+        startLabel.textContent = "Start";
+        const startInput = document.createElement("input");
+        startInput.type = "datetime-local";
+        startInput.value = toLocalInputValue(entry.startedAt);
+        startInput.addEventListener("change", () => {
+          const next = fromLocalInputValue(startInput.value);
+          if (!next) return;
+          entry.startedAt = next;
+          save();
+          renderLockHistory();
+        });
+        startRow.append(startLabel, startInput);
+
+        const endRow = document.createElement("div");
+        endRow.className = "lock-history-row";
+        const endLabel = document.createElement("div");
+        endLabel.textContent = "End";
+        const endInput = document.createElement("input");
+        endInput.type = "datetime-local";
+        endInput.value = toLocalInputValue(entry.endedAt);
+        endInput.addEventListener("change", () => {
+          const next = fromLocalInputValue(endInput.value);
+          if (!next) return;
+          entry.endedAt = next;
+          save();
+          renderLockHistory();
+        });
+        endRow.append(endLabel, endInput);
+
+        const taskRow = document.createElement("div");
+        taskRow.className = "lock-history-row";
+        const taskLabel = document.createElement("div");
+        taskLabel.textContent = "Task";
+        const taskInput = document.createElement("input");
+        taskInput.type = "text";
+        taskInput.value = entry.task || "";
+        taskInput.addEventListener("change", () => {
+          entry.task = taskInput.value.trim();
+          save();
+          renderLockHistory();
+        });
+        taskRow.append(taskLabel, taskInput);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "mini-btn lock-history-delete";
+        deleteBtn.type = "button";
+        deleteBtn.textContent = "Delete";
+        deleteBtn.addEventListener("click", () => {
+          state.lockHistory = state.lockHistory.filter((e) => e.id !== entry.id);
+          save();
+          renderLockHistory();
+        });
+
+        edit.append(startRow, endRow, taskRow, deleteBtn);
+        item.append(compact, edit);
+        lockHistoryList.appendChild(item);
+      });
+    }
+
     function updateLockUI() {
 
       if (!lockBtn) return;
+
+      const activeLock = state.activeLock && typeof state.activeLock.startedAt === "number" ? state.activeLock : null;
+
+      if (activeLock) {
+        lockBtn.disabled = false;
+        lockBtn.classList.add("is-locked");
+        if (lockinPanel) lockinPanel.classList.add("is-locked");
+        if (panelCtaTextEl) panelCtaTextEl.textContent = "Unlock";
+        if (panelElapsedEl) {
+          const elapsedSecs = (Date.now() - activeLock.startedAt) / 1000;
+          panelElapsedEl.textContent = formatDuration(elapsedSecs);
+        }
+        if (panelRangeEl) panelRangeEl.textContent = formatLockStart(activeLock);
+        const lockedTask = (activeLock.task || "").trim();
+        if (panelTaskEl) panelTaskEl.innerHTML = `Task: <span>${lockedTask || "—"}</span>`;
+        return;
+      }
 
       const now = new Date();
 
@@ -7745,21 +8382,10 @@ function deleteSlot(dk, t) {
 
       panelTaskEl.innerHTML = `Task: <span>${task || "—"}</span>`;
 
-      if (isBlockLocked(dk, info.timeKey)) {
-        lockBtn.classList.add("is-locked");
-        if (lockinPanel) lockinPanel.classList.add("is-locked");
-        if (panelCtaTextEl) panelCtaTextEl.textContent = "Locked In";
-        const lockInfo = getLockInfo(dk, info.timeKey);
-        if (panelElapsedEl) {
-          const elapsedSecs = lockInfo ? (Date.now() - lockInfo.startedAt) / 1000 : 0;
-          panelElapsedEl.textContent = formatDuration(elapsedSecs);
-        }
-      } else {
-        lockBtn.classList.remove("is-locked");
-        if (lockinPanel) lockinPanel.classList.remove("is-locked");
-        if (panelCtaTextEl) panelCtaTextEl.textContent = "Lock In";
-        if (panelElapsedEl) panelElapsedEl.textContent = "";
-      }
+      lockBtn.classList.remove("is-locked");
+      if (lockinPanel) lockinPanel.classList.remove("is-locked");
+      if (panelCtaTextEl) panelCtaTextEl.textContent = "Lock In";
+      if (panelElapsedEl) panelElapsedEl.textContent = "";
     }
 
 
@@ -7767,6 +8393,28 @@ function deleteSlot(dk, t) {
     function handleLockAction() {
 
       const now = new Date();
+
+      if (state.activeLock && typeof state.activeLock.startedAt === "number") {
+        const endedAt = Date.now();
+        const lockEntry = {
+          id: makeId(),
+          startedAt: state.activeLock.startedAt,
+          endedAt,
+          dateKey: state.activeLock.dateKey,
+          timeKey: state.activeLock.timeKey,
+          task: state.activeLock.task || ""
+        };
+        state.lockHistory.unshift(lockEntry);
+        if (state.activeLock.dateKey && state.activeLock.timeKey) {
+          setBlockLocked(state.activeLock.dateKey, state.activeLock.timeKey, false);
+        }
+        state.activeLock = null;
+        save();
+        renderSchedule();
+        updateLockUI();
+        renderLockHistory();
+        return;
+      }
 
       if (!isSameDay(selected, now)) {
 
@@ -7787,31 +8435,19 @@ function deleteSlot(dk, t) {
       }
 
       const dk = dateKey(selected);
-
-      if (isBlockLocked(dk, info.timeKey)) {
-
-        setBlockLocked(dk, info.timeKey, false);
-
-        save();
-
-        renderSchedule();
-
-        updateLockUI();
-
-        return;
-
-      }
-
+      const task = getSlotText(dk, info.timeKey).trim();
+      state.activeLock = {
+        id: makeId(),
+        startedAt: Date.now(),
+        dateKey: dk,
+        timeKey: info.timeKey,
+        task
+      };
       setBlockLocked(dk, info.timeKey, true);
-
       save();
-
       renderSchedule();
-
       updateLockUI();
-
     }
-
 
 
     if (lockBtn) {
@@ -7819,6 +8455,38 @@ function deleteSlot(dk, t) {
       lockBtn.addEventListener("click", handleLockAction);
 
     }
+
+    if (lockHistoryBtn && lockHistoryPop) {
+      lockHistoryBtn.addEventListener("click", () => {
+        if (lockHistoryDate) lockHistoryDate.value = toDateInputValue(selected);
+        if (lockHistoryPanel) lockHistoryPanel.classList.remove("is-editing");
+        renderLockHistory();
+        openCenteredPopover(lockHistoryPop);
+      });
+    }
+
+    if (lockHistoryDate) {
+      lockHistoryDate.addEventListener("change", () => {
+        const next = fromDateInputValue(lockHistoryDate.value);
+        if (!next) return;
+        setSelectedDate(next);
+      });
+    }
+
+    if (lockHistoryPanel) {
+      lockHistoryPanel.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!(target instanceof Element)) return;
+        if (!target.closest(".lock-history-goal-link")) return;
+        lockHistoryPanel.classList.add("is-editing");
+        const goalInline = lockHistorySummary ? lockHistorySummary.querySelector("#lockHistoryGoalInline") : null;
+        if (goalInline) {
+          goalInline.focus();
+          goalInline.select();
+        }
+      });
+    }
+
 
 
 
